@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎓 POST-UTME CBT EXAM</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600&display=swap');
+        :root {
+            --ink: #0b0f1a;
+            --surface: #111827;
+            --card: #1a2233;
+            --border: rgba(255,255,255,0.07);
+            --accent: #6366f1;
+            --accent2: #818cf8;
+            --gold: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --muted: #64748b;
+            --text: #e2e8f0;
+            --subtext: #94a3b8;
+        }
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Inter',system-ui,sans-serif;
+            background: var(--ink);
+            color: var(--text);
+            min-height:100vh;
+            overflow-x:hidden;
+            -webkit-user-select:none;
+            user-select:none;
+        }
+        #lockScreen {
+            position:fixed; inset:0; z-index:9999; background: var(--ink);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            gap:20px; text-align:center; padding:24px;
+        }
+        #lockScreen.hidden { display:none; }
+        .lock-logo { font-size:3rem; margin-bottom:4px; }
+        .lock-title { font-size:1.6rem; font-weight:800; color:var(--text); letter-spacing:-0.5px; }
+        .lock-sub { color:var(--subtext); font-size:0.9rem; max-width:340px; line-height:1.5; }
+        .lock-btn {
+            margin-top:8px; background: var(--accent); color:#fff; border:none; padding:14px 36px;
+            border-radius:100px; font-weight:700; font-size:1rem; cursor:pointer;
+            box-shadow:0 0 30px rgba(99,102,241,0.4); transition:transform 0.15s, box-shadow 0.15s;
+        }
+        .lock-btn:hover { transform:translateY(-2px); box-shadow:0 0 40px rgba(99,102,241,0.55); }
+        .modal-overlay {
+            position:fixed; inset:0; z-index:8000; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px);
+            display:none; align-items:center; justify-content:center; padding:20px;
+        }
+        .modal-overlay.show { display:flex; }
+        .modal-card {
+            background: var(--card); border:1px solid var(--border); border-radius:28px; padding:36px 32px;
+            width:100%; max-width:440px; box-shadow:0 40px 80px rgba(0,0,0,0.6);
+            animation:popIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .modal-card.wide { max-width:540px; }
+        @keyframes popIn {
+            from{opacity:0;transform:scale(0.88);} to{opacity:1;transform:scale(1);}
+        }
+        .modal-card h2 { font-size:1.4rem; font-weight
