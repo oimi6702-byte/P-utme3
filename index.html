@@ -1,960 +1,1817 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>UNILAG Post-UTME CBT Simulator</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UNILAG Post-UTME CBT Simulator V2</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js">
+    </script>
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        :root {
+            --primary: #8B0000;
+            --primary-light: #a31515;
+            --primary-dark: #5a0000;
+            --gold: #c9a84c;
+            --gold-light: #e8d5a3;
+            --bg: #f4f1ec;
+            --card-bg: #ffffff;
+            --text: #1e1e1e;
+            --text-light: #4a4a4a;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --radius: 16px;
+            --transition: 0.3s ease;
+            --font: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+        }
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        /* ===== APP CONTAINER ===== */
+        #app {
+            width: 100%;
+            max-width: 960px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 28px 32px;
+            position: relative;
+            transition: all var(--transition);
+            min-height: 80vh;
+        }
+        @media (max-width: 640px) {
+            #app {
+                padding: 16px 14px;
+                border-radius: 12px;
+                min-height: 90vh;
+            }
+        }
 
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+        /* ===== SCREENS ===== */
+        .screen {
+            display: none;
+            animation: fadeUp 0.4s ease;
+        }
+        .screen.active {
+            display: block;
+        }
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-  <style>
-    :root{
-      --bg:#0f172a;
-      --panel:#111c33;
-      --panel-2:#0b1324;
-      --line:#24324f;
-      --text:#e5eefc;
-      --muted:#94a3b8;
-      --accent:#3b82f6;
-      --accent-2:#2563eb;
-      --danger:#ef4444;
-      --success:#22c55e;
-      --warning:#f59e0b;
-      --shadow:0 25px 60px rgba(0,0,0,.45);
-      --radius:22px;
-    }
+        /* ===== HEADINGS ===== */
+        h1,
+        h2,
+        h3 {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        h1 {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+        h2 {
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+        }
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+        .subhead {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+        .unilag-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.7rem;
+            padding: 4px 14px;
+            border-radius: 30px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
 
-    *{
-      box-sizing:border-box;
-      margin:0;
-      padding:0;
-      font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;
-    }
+        /* ===== FORM ELEMENTS ===== */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            color: var(--text-light);
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0ddd8;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border var(--transition);
+            background: #fafaf8;
+            font-family: var(--font);
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.08);
+        }
+        .form-group .error-msg {
+            color: #d32f2f;
+            font-size: 0.8rem;
+            margin-top: 4px;
+            display: none;
+        }
+        .form-group.error input,
+        .form-group.error select {
+            border-color: #d32f2f;
+        }
+        .form-group.error .error-msg {
+            display: block;
+        }
 
-    body{
-      min-height:100vh;
-      background:
-        radial-gradient(circle at top, rgba(59,130,246,.15), transparent 30%),
-        linear-gradient(180deg, #0b1020 0%, #0f172a 100%);
-      color:var(--text);
-      padding:16px;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-    }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 480px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
 
-    .container{
-      width:100%;
-      max-width:980px;
-      background:rgba(17,28,51,.95);
-      border:1px solid rgba(148,163,184,.15);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:22px;
-    }
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: #eae7e1;
+            color: var(--text);
+            font-family: var(--font);
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 0, 0, 0.25);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-gold {
+            background: var(--gold);
+            color: #1e1e1e;
+        }
+        .btn-gold:hover {
+            background: #b8942e;
+            transform: translateY(-2px);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        .btn-outline:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-success {
+            background: #2e7d32;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #1b5e20;
+        }
+        .btn-danger {
+            background: #c62828;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #b71c1c;
+        }
+        .btn-sm {
+            padding: 6px 16px;
+            font-size: 0.85rem;
+        }
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
 
-    .title{
-      font-size:2rem;
-      font-weight:800;
-      text-align:center;
-      margin-bottom:8px;
-      letter-spacing:.2px;
-    }
+        /* ===== SUBJECT SELECTION ===== */
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .subject-card {
+            padding: 16px 12px;
+            border-radius: 12px;
+            border: 2.5px solid #e0ddd8;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: #fafaf8;
+            font-weight: 600;
+            font-size: 0.95rem;
+            user-select: none;
+        }
+        .subject-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-3px);
+        }
+        .subject-card.selected {
+            border-color: var(--primary);
+            background: #fff5f5;
+            box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.12);
+            color: var(--primary);
+        }
+        .subject-card .badge {
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 400;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+        .subject-card.selected .badge {
+            color: var(--primary);
+        }
+        .subject-count {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 8px;
+        }
+        .subject-count strong {
+            color: var(--primary);
+        }
 
-    .subtitle{
-      text-align:center;
-      color:var(--muted);
-      margin-bottom:22px;
-      font-size:.96rem;
-      line-height:1.5;
-    }
+        /* ===== INSTRUCTIONS ===== */
+        .instructions-box {
+            background: #f8f6f3;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 16px 0;
+            border-left: 5px solid var(--gold);
+        }
+        .instructions-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        .instructions-box li {
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .instructions-box li:last-child {
+            border-bottom: none;
+        }
+        .instructions-box li::before {
+            content: "▸";
+            color: var(--gold);
+            font-weight: 700;
+        }
+        .candidate-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 24px;
+            font-size: 0.95rem;
+            margin: 12px 0;
+        }
+        .candidate-summary strong {
+            color: var(--primary-dark);
+        }
+        @media (max-width: 480px) {
+            .candidate-summary {
+                grid-template-columns: 1fr;
+                gap: 2px;
+            }
+        }
 
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:12px;
-    }
+        /* ===== EXAM ===== */
+        .exam-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 16px;
+        }
+        .exam-header .timer {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            background: #fff5f5;
+            padding: 6px 18px;
+            border-radius: 30px;
+            border: 2px solid var(--primary);
+            font-variant-numeric: tabular-nums;
+        }
+        .exam-header .timer.warning {
+            color: #c62828;
+            border-color: #c62828;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        .exam-header .q-counter {
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        .exam-header .q-counter strong {
+            color: var(--text);
+        }
 
-    .stack{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
+        .question-container {
+            padding: 8px 0 16px;
+        }
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 500;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: #fafaf8;
+            border-radius: 10px;
+            border-left: 4px solid var(--gold);
+        }
+        .question-subject {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 14px;
+            border-radius: 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 8px 0 20px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: 2px solid #e8e5df;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: #fcfcfb;
+        }
+        .option:hover {
+            border-color: var(--gold);
+            background: #faf8f4;
+        }
+        .option.selected {
+            border-color: var(--primary);
+            background: #fff5f5;
+            box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.08);
+        }
+        .option input[type="radio"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #bbb;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all var(--transition);
+            position: relative;
+            cursor: pointer;
+        }
+        .option input[type="radio"]:checked {
+            border-color: var(--primary);
+            background: var(--primary);
+        }
+        .option input[type="radio"]:checked::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #fff;
+        }
+        .option .label {
+            flex: 1;
+            font-size: 1rem;
+            cursor: pointer;
+        }
 
-    input, button{
-      width:100%;
-      border:none;
-      outline:none;
-      border-radius:14px;
-      padding:14px 16px;
-      font-size:1rem;
-      transition:.2s ease;
-    }
+        .exam-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 2px solid #eee;
+        }
+        .exam-nav .nav-btns {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
-    input{
-      background:#0b1324;
-      color:var(--text);
-      border:1px solid var(--line);
-    }
+        /* ===== QUESTION PALETTE ===== */
+        .palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 0 8px;
+            margin-top: 12px;
+            border-top: 2px solid #eee;
+        }
+        .palette .pill {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: #fafaf8;
+            color: var(--text);
+        }
+        .palette .pill:hover {
+            transform: scale(1.05);
+            border-color: var(--gold);
+        }
+        .palette .pill.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #fff;
+            transform: scale(1.08);
+        }
+        .palette .pill.answered {
+            border-color: #2e7d32;
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+        .palette .pill.active.answered {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        .palette-legend {
+            display: flex;
+            gap: 18px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+        .palette-legend span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .palette-legend .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            display: inline-block;
+        }
+        .palette-legend .dot.answered-dot {
+            background: #e8f5e9;
+            border-color: #2e7d32;
+        }
+        .palette-legend .dot.active-dot {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
 
-    input::placeholder{ color:#70809d; }
+        /* ===== RESULTS ===== */
+        .result-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .result-card {
+            background: #f8f6f3;
+            border-radius: 12px;
+            padding: 16px 12px;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+        .result-card .number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .result-card .label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+        .result-card.pass .number {
+            color: #2e7d32;
+        }
+        .result-card.fail .number {
+            color: #c62828;
+        }
 
-    input:focus{
-      border-color:rgba(59,130,246,.8);
-      box-shadow:0 0 0 4px rgba(59,130,246,.15);
-    }
+        .review-item {
+            background: #fafaf8;
+            border-radius: 10px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            border-left: 4px solid #2e7d32;
+            border-left-color: #c62828;
+        }
+        .review-item.correct {
+            border-left-color: #2e7d32;
+        }
+        .review-item .r-q {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .review-item .r-answer {
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+        .review-item .r-answer strong {
+            color: var(--text);
+        }
+        .review-item .r-explanation {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #f0ede8;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        .review-item .r-explanation strong {
+            color: var(--text);
+        }
 
-    .section-label{
-      margin-top:6px;
-      margin-bottom:10px;
-      color:#dbe7ff;
-      font-weight:700;
-      font-size:1rem;
-    }
+        /* ===== UTILITY ===== */
+        .text-center {
+            text-align: center;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .mt-16 {
+            margin-top: 16px;
+        }
+        .mt-24 {
+            margin-top: 24px;
+        }
+        .mb-16 {
+            margin-bottom: 16px;
+        }
+        .gap-8 {
+            gap: 8px;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .flex-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .w-full {
+            width: 100%;
+        }
 
-    .subject-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-      gap:10px;
-    }
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e1e1e;
+            color: #fff;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-weight: 500;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s ease;
+            max-width: 90%;
+            text-align: center;
+        }
+        .toast.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success {
+            background: #2e7d32;
+        }
+        .toast.error {
+            background: #c62828;
+        }
+        .toast.info {
+            background: #0d47a1;
+        }
 
-    .subject-card{
-      background:#0b1324;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px 12px;
-      text-align:center;
-      cursor:pointer;
-      user-select:none;
-      transition:.2s ease;
-      font-weight:700;
-      color:#d8e4fb;
-    }
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            h1 {
+                font-size: 1.6rem;
+            }
+            h2 {
+                font-size: 1.3rem;
+            }
+            .question-text {
+                font-size: 1rem;
+                padding: 10px 12px;
+            }
+            .option {
+                padding: 10px 14px;
+            }
+            .exam-header .timer {
+                font-size: 1.1rem;
+                padding: 4px 14px;
+            }
+            .subject-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            .result-summary {
+                grid-template-columns: 1fr 1fr;
+            }
+            .palette .pill {
+                width: 34px;
+                height: 34px;
+                font-size: 0.75rem;
+            }
+            .exam-nav {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .exam-nav .nav-btns {
+                justify-content: center;
+            }
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+        @media (max-width: 400px) {
+            #app {
+                padding: 12px 10px;
+            }
+            .subject-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .subject-card {
+                padding: 12px 8px;
+                font-size: 0.85rem;
+            }
+            .result-summary {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .result-card .number {
+                font-size: 1.8rem;
+            }
+        }
 
-    .subject-card:hover{
-      transform:translateY(-1px);
-      border-color:#3b82f6;
-    }
-
-    .subject-card.selected{
-      background:linear-gradient(180deg, rgba(37,99,235,.35), rgba(30,64,175,.4));
-      border-color:#60a5fa;
-      box-shadow:0 0 0 1px rgba(96,165,250,.25), 0 0 20px rgba(59,130,246,.12);
-    }
-
-    .btn{
-      background:linear-gradient(180deg, var(--accent), var(--accent-2));
-      color:white;
-      font-weight:800;
-      cursor:pointer;
-      letter-spacing:.2px;
-    }
-
-    .btn:hover{ transform:translateY(-1px); }
-
-    .btn:disabled{
-      background:#334155;
-      cursor:not-allowed;
-      transform:none;
-      opacity:.8;
-    }
-
-    .btn-danger{
-      background:linear-gradient(180deg, #ef4444, #dc2626);
-      color:#fff;
-      font-weight:800;
-    }
-
-    .hidden{ display:none !important; }
-
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:center;
-      margin-bottom:14px;
-      flex-wrap:wrap;
-    }
-
-    .pill{
-      background:#0b1324;
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:10px 14px;
-      color:#d8e4fb;
-      font-weight:700;
-      font-size:.95rem;
-    }
-
-    .timer{
-      font-variant-numeric:tabular-nums;
-    }
-
-    .timer.warning{
-      color:#fecaca;
-      border-color:rgba(239,68,68,.45);
-      animation:pulse 1s infinite;
-    }
-
-    @keyframes pulse{
-      0%,100%{ opacity:1; }
-      50%{ opacity:.6; }
-    }
-
-    .progress{
-      margin:10px 0 14px;
-      color:#cdd9ef;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-
-    .question-card{
-      background:var(--panel-2);
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:18px;
-      margin-top:10px;
-    }
-
-    .question-text{
-      font-size:1.14rem;
-      line-height:1.6;
-      font-weight:700;
-      margin-bottom:14px;
-      color:#f4f7ff;
-    }
-
-    .subject-tag{
-      display:inline-block;
-      margin-bottom:10px;
-      background:rgba(59,130,246,.12);
-      border:1px solid rgba(59,130,246,.25);
-      color:#cfe2ff;
-      border-radius:999px;
-      padding:6px 10px;
-      font-size:.88rem;
-      font-weight:700;
-    }
-
-    .options{
-      display:grid;
-      gap:10px;
-      margin-top:10px;
-    }
-
-    .option-btn{
-      background:#0b1324;
-      border:1px solid var(--line);
-      color:#e8f0ff;
-      border-radius:14px;
-      padding:14px;
-      text-align:left;
-      cursor:pointer;
-      transition:.2s ease;
-      line-height:1.45;
-    }
-
-    .option-btn:hover{
-      border-color:#5b86d7;
-      transform:translateY(-1px);
-    }
-
-    .option-btn.selected{
-      background:rgba(59,130,246,.18);
-      border-color:#60a5fa;
-      box-shadow:0 0 0 1px rgba(96,165,250,.12);
-    }
-
-    .nav-row{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:14px;
-    }
-
-    .palette{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:16px;
-    }
-
-    .palette-btn{
-      width:40px;
-      height:40px;
-      border-radius:10px;
-      border:1px solid var(--line);
-      background:#0b1324;
-      color:#e8f0ff;
-      font-weight:800;
-      cursor:pointer;
-    }
-
-    .palette-btn.current{
-      outline:3px solid rgba(96,165,250,.35);
-      border-color:#60a5fa;
-    }
-
-    .palette-btn.answered{
-      background:rgba(34,197,94,.18);
-      border-color:rgba(34,197,94,.35);
-    }
-
-    .result-wrap{
-      max-width:980px;
-    }
-
-    .score-big{
-      text-align:center;
-      font-size:4.5rem;
-      font-weight:900;
-      line-height:1;
-      margin:10px 0 6px;
-      color:#f8fafc;
-      letter-spacing:-1px;
-    }
-
-    .score-sub{
-      text-align:center;
-      color:var(--muted);
-      margin-bottom:18px;
-      font-size:1rem;
-    }
-
-    .review-title{
-      font-size:1.2rem;
-      font-weight:800;
-      margin:18px 0 10px;
-      color:#eaf2ff;
-    }
-
-    .review-list{
-      display:grid;
-      gap:12px;
-      max-height:62vh;
-      overflow:auto;
-      padding-right:4px;
-    }
-
-    .review-card{
-      border-radius:18px;
-      padding:16px;
-      border:1px solid var(--line);
-      background:#0b1324;
-    }
-
-    .review-card.wrong{
-      border-left:6px solid var(--danger);
-      background:linear-gradient(180deg, rgba(127,29,29,.2), rgba(11,19,36,1));
-    }
-
-    .review-card.correct{
-      border-left:6px solid var(--success);
-      background:linear-gradient(180deg, rgba(22,101,52,.18), rgba(11,19,36,1));
-    }
-
-    .review-q{
-      font-weight:800;
-      margin-bottom:8px;
-      line-height:1.5;
-    }
-
-    .review-line{
-      margin:4px 0;
-      color:#d6e0f7;
-      line-height:1.5;
-    }
-
-    .review-badge{
-      display:inline-block;
-      margin-bottom:10px;
-      border-radius:999px;
-      padding:6px 10px;
-      font-size:.82rem;
-      font-weight:800;
-      letter-spacing:.2px;
-    }
-
-    .badge-correct{
-      background:rgba(34,197,94,.15);
-      color:#baf7d0;
-      border:1px solid rgba(34,197,94,.25);
-    }
-
-    .badge-wrong{
-      background:rgba(239,68,68,.15);
-      color:#fecaca;
-      border:1px solid rgba(239,68,68,.25);
-    }
-
-    .small-muted{
-      color:var(--muted);
-      font-size:.92rem;
-    }
-
-    .notice{
-      margin-top:12px;
-      color:#a9b7d3;
-      font-size:.92rem;
-      text-align:center;
-    }
-
-    @media (max-width: 700px){
-      .container{ padding:16px; }
-      .title{ font-size:1.5rem; }
-      .grid, .nav-row{ grid-template-columns:1fr; }
-      .score-big{ font-size:3.4rem; }
-      .question-text{ font-size:1.05rem; }
-    }
-  </style>
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f0ede8;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b8942e;
+        }
+    </style>
 </head>
-
 <body>
-  <div class="container" id="loginScreen">
-    <div class="title">UNILAG POST-UTME CBT</div>
-    <div class="subtitle">
-      Select your details, choose at least <strong>3 subjects</strong>, then start.
-      Each selected subject gives <strong>20 questions</strong>. No answer feedback will show until you submit.
-    </div>
 
-    <div class="grid">
-      <div class="stack">
-        <input id="firstName" type="text" placeholder="Name" autocomplete="given-name" />
-        <input id="lastName" type="text" placeholder="Last name" autocomplete="family-name" />
-        <input id="email" type="email" placeholder="Email" autocomplete="email" />
-        <input id="phone" type="tel" placeholder="Phone number" autocomplete="tel" />
-        <input id="pin" type="password" placeholder="Exam PIN" maxlength="6" />
-      </div>
+    <div id="app">
+        <!-- ===== TOAST ===== -->
+        <div id="toast" class="toast"></div>
 
-      <div class="stack">
-        <div class="section-label">Select at least 3 subjects</div>
-        <div class="subject-grid" id="subjectSelection"></div>
-        <button class="btn" id="startBtn" onclick="startExam()">Start Exam</button>
-        <div class="notice">
-          Result email is sent automatically through EmailJS.
+        <!-- ===== SCREEN: LOGIN ===== -->
+        <div id="screen-login" class="screen active">
+            <div class="text-center">
+                <span class="unilag-badge">UNILAG</span>
+                <h1>Post-UTME CBT Simulator</h1>
+                <p class="subhead">University of Lagos · 2026/2027 Session</p>
+            </div>
+            <form id="loginForm" autocomplete="off">
+                <div class="form-row">
+                    <div class="form-group" id="fg-firstname">
+                        <label>First Name</label>
+                        <input type="text" id="firstName" placeholder="e.g. Chidi" required />
+                        <div class="error-msg">First name is required</div>
+                    </div>
+                    <div class="form-group" id="fg-lastname">
+                        <label>Last Name</label>
+                        <input type="text" id="lastName" placeholder="e.g. Okonkwo" required />
+                        <div class="error-msg">Last name is required</div>
+                    </div>
+                </div>
+                <div class="form-group" id="fg-email">
+                    <label>Email Address</label>
+                    <input type="email" id="email" placeholder="you@example.com" required />
+                    <div class="error-msg">Valid email is required</div>
+                </div>
+                <div class="form-group" id="fg-phone">
+                    <label>Phone Number</label>
+                    <input type="tel" id="phone" placeholder="e.g. 08012345678" required />
+                    <div class="error-msg">Phone number is required</div>
+                </div>
+                <div class="form-group" id="fg-jamb">
+                    <label>JAMB Registration Number</label>
+                    <input type="text" id="jambReg" placeholder="e.g. 202612345678" required />
+                    <div class="error-msg">JAMB number is required</div>
+                </div>
+                <div class="form-group" id="fg-course">
+                    <label>Course Applied For</label>
+                    <input type="text" id="course" placeholder="e.g. Computer Science" required />
+                    <div class="error-msg">Course is required</div>
+                </div>
+                <div class="form-group" id="fg-pin">
+                    <label>Exam PIN</label>
+                    <input type="password" id="examPin" placeholder="Enter your exam PIN" required />
+                    <div class="error-msg">PIN is required (demo: UNILAG2026)</div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block mt-16">Proceed to Subject Selection</button>
+            </form>
+            <p class="text-center mt-8" style="font-size:0.8rem;color:var(--text-light);">Demo PIN: <strong>UNILAG2026</strong></p>
         </div>
-      </div>
+
+        <!-- ===== SCREEN: SUBJECT SELECTION ===== -->
+        <div id="screen-subjects" class="screen">
+            <div class="text-center">
+                <span class="unilag-badge">Step 2</span>
+                <h2>Select Your Subjects</h2>
+                <p class="subhead">Choose at least 3 subjects. You must answer 20 questions per subject.</p>
+            </div>
+            <div class="subject-grid" id="subjectGrid">
+                <!-- Rendered by JS -->
+            </div>
+            <div class="subject-count" id="subjectCount">Selected: <strong>0</strong> subjects (minimum 3)</div>
+            <button id="btnStartExam" class="btn btn-primary btn-block mt-16" disabled>Begin Exam</button>
+            <button id="btnBackToLogin" class="btn btn-outline btn-block mt-8">← Back to Login</button>
+        </div>
+
+        <!-- ===== SCREEN: INSTRUCTIONS ===== -->
+        <div id="screen-instructions" class="screen">
+            <div class="text-center">
+                <span class="unilag-badge">Step 3</span>
+                <h2>Exam Instructions</h2>
+            </div>
+            <div class="instructions-box">
+                <ul>
+                    <li>You have selected <strong id="inst-subject-count">0</strong> subjects.</li>
+                    <li>Total questions: <strong id="inst-total-q">0</strong> (20 per subject).</li>
+                    <li>Time allowed: <strong id="inst-total-time">0</strong> minutes.</li>
+                    <li>Each question has <strong>one correct answer</strong>.</li>
+                    <li>You can navigate using <strong>Previous / Next</strong> or the <strong>question palette</strong>.</li>
+                    <li>Your answers are <strong>auto-saved</strong> as you select them.</li>
+                    <li>The exam will <strong>auto-submit</strong> when time runs out.</li>
+                    <li>No answer will be shown until you submit.</li>
+                    <li>You can change your answers anytime before submission.</li>
+                </ul>
+            </div>
+            <div class="candidate-summary" id="candidateSummary">
+                <!-- Rendered by JS -->
+            </div>
+            <div class="flex-wrap" style="justify-content:space-between;margin-top:16px;">
+                <button id="btnBackToSubjects" class="btn btn-outline">← Back</button>
+                <button id="btnBeginExam" class="btn btn-primary">Start Exam →</button>
+            </div>
+        </div>
+
+        <!-- ===== SCREEN: EXAM ===== -->
+        <div id="screen-exam" class="screen">
+            <div class="exam-header">
+                <div>
+                    <div class="q-counter">Question <strong id="current-q-num">1</strong> of <span id="total-q-num">0</span></div>
+                    <div style="font-size:0.8rem;color:var(--text-light);margin-top:2px;" id="exam-subject-label">Subject</div>
+                </div>
+                <div class="timer" id="examTimer">00:00</div>
+            </div>
+
+            <div class="question-container" id="questionContainer">
+                <!-- Rendered by JS -->
+            </div>
+
+            <div class="palette-legend">
+                <span><span class="dot active-dot"></span> Current</span>
+                <span><span class="dot answered-dot"></span> Answered</span>
+                <span><span class="dot"></span> Unanswered</span>
+            </div>
+            <div class="palette" id="questionPalette">
+                <!-- Rendered by JS -->
+            </div>
+
+            <div class="exam-nav">
+                <div class="nav-btns">
+                    <button id="btnPrev" class="btn btn-outline btn-sm">← Previous</button>
+                    <button id="btnNext" class="btn btn-primary btn-sm">Next →</button>
+                </div>
+                <div>
+                    <button id="btnSubmitExam" class="btn btn-danger btn-sm">Submit Exam</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SCREEN: RESULTS ===== -->
+        <div id="screen-results" class="screen">
+            <div class="text-center">
+                <span class="unilag-badge">Results</span>
+                <h2>Exam Completed</h2>
+                <p class="subhead" id="result-candidate-name"></p>
+            </div>
+            <div class="result-summary" id="resultSummary">
+                <!-- Rendered by JS -->
+            </div>
+            <div style="margin:16px 0;text-align:center;">
+                <button id="btnToggleReview" class="btn btn-gold">📋 Review Wrong Answers</button>
+                <button id="btnPrintResults" class="btn btn-outline" style="margin-left:8px;">🖨️ Print</button>
+            </div>
+            <div id="reviewContainer" style="display:none;margin-top:16px;">
+                <h3>📘 Detailed Review</h3>
+                <div id="reviewList"></div>
+            </div>
+            <div class="flex-wrap" style="justify-content:center;margin-top:20px;gap:12px;">
+                <button id="btnRestart" class="btn btn-primary">🔄 Retake Exam</button>
+            </div>
+            <p class="text-center mt-8" style="font-size:0.8rem;color:var(--text-light);" id="emailStatus">📧 Results have been sent to the teacher.</p>
+        </div>
+
     </div>
-  </div>
 
-  <div class="container hidden" id="quizScreen">
-    <div class="topbar">
-      <div class="pill" id="timerDisplay">Time: 00:00</div>
-      <div class="pill" id="subjectCountDisplay">Subjects: 0</div>
-    </div>
+    <script>
+        // ============================================================
+        // 1. EMAILJS INIT
+        // ============================================================
+        (function() {
+            emailjs.init({
+                publicKey: "YOUR_PUBLIC_KEY",
+            });
+        })();
 
-    <div class="progress">
-      <div id="progressText">Question 1 of 1</div>
-      <div id="answeredText">Answered: 0</div>
-    </div>
+        // ============================================================
+        // 2. QUESTION BANK — 120 Questions (20 per subject)
+        // ============================================================
+        const QUESTION_BANK = {
+            English: [
+                { id: 'E1', q: 'In the sentence "The committee were divided in their opinions," the verb "were" is an example of:', options: ['Synesis', 'Anacoluthon', 'Hyperbaton', 'Zeugma'], answer: 0,
+                    explanation: 'Synesis (also called constructio ad sensum) occurs when the verb agrees with the sense of the subject rather than its grammatical form. "Committee" is singular in form but plural in sense.' },
+                { id: 'E2', q: 'Which of the following contains a dangling modifier?', options: ['Running swiftly, the finish line approached.', 'Having finished the test, she left the hall.',
+                        'To succeed, one must work hard.', 'The book, written in 1999, is a classic.'
+                    ], answer: 0, explanation: '"Running swiftly" logically modifies "the finish line," which is nonsensical—it should modify a person.' },
+                { id: 'E3', q: 'The word "inflammable" means:', options: ['Not flammable', 'Easily set on fire', 'Resistant to fire', 'Slow to burn'], answer: 1,
+                    explanation: 'Despite the prefix "in-," inflammable means the same as flammable—easily ignited. This is a common lexical trap.' },
+                { id: 'E4', q: 'Identify the sentence with correct subject-verb agreement:', options: ['Neither the teacher nor the students is present.', 'Either the manager or the assistants are responsible.',
+                        'The news are shocking.', 'Mathematics are my favourite subject.'
+                    ], answer: 1, explanation: 'With "either/or" and "neither/nor," the verb agrees with the noun closest to it. "Assistants" is plural, so "are" is correct.' },
+                { id: 'E5', q: 'The phrase "peruse" most nearly means:', options: ['To glance over', 'To examine carefully', 'To skip through', 'To ignore'], answer: 1,
+                    explanation: 'Peruse means to read or examine thoroughly, not to skim. A common misconception.' },
+                { id: 'E6', q: 'Which literary device is used in "The wind whispered through the trees"?', options: ['Simile', 'Metaphor', 'Personification', 'Hyperbole'], answer: 2,
+                    explanation: 'Personification attributes human qualities (whispering) to an inanimate object (the wind).' },
+                { id: 'E7', q: 'Choose the correctly punctuated sentence:', options: ['Its a beautiful day.', "It's a beautiful day.", 'Its\' a beautiful day.', 'It is\' a beautiful day.'],
+                    answer: 1, explanation: '"It\'s" is the contraction of "it is." "Its" is possessive. The apostrophe indicates the contraction.' },
+                { id: 'E8', q: 'The word "enormity" in formal usage refers to:', options: ['Great size', 'Great wickedness', 'Great importance', 'Great beauty'], answer: 1,
+                    explanation: 'Formally, "enormity" means extreme wickedness or monstrosity, not size. Using it to mean "great size" is colloquial but technically incorrect.' },
+                { id: 'E9', q: 'Which sentence is in the subjunctive mood?', options: ['If I was you, I would go.', 'If I were you, I would go.', 'If I am you, I will go.',
+                        'If I had been you, I would go.'
+                    ], answer: 1, explanation: 'The subjunctive mood uses "were" for unreal/hypothetical situations (contrary to fact). "If I were you" is the correct subjunctive form.' },
+                { id: 'E10', q: '"My brother, who lives in London, is a doctor." The clause "who lives in London" is:', options: ['Restrictive', 'Non-restrictive', 'Adverbial', 'Nominal'],
+                    answer: 1, explanation: 'The clause is non-restrictive (provides extra information) and is set off by commas. It does not limit which brother.' },
+                { id: 'E11', q: 'The opposite of "ephemeral" is:', options: ['Transient', 'Eternal', 'Fleeting', 'Brief'], answer: 1,
+                    explanation: 'Ephemeral means short-lived; its opposite is eternal or lasting.' },
+                { id: 'E12', q: 'Choose the correct passive voice transformation: "The teacher gave the students a test."', options: ['A test was given to the students by the teacher.',
+                        'The students were given a test by the teacher.', 'Both A and B are correct.', 'Neither A nor B is correct.'
+                    ], answer: 2, explanation: 'Both are grammatically correct passive transformations. The direct object (test) or indirect object (students) can become the subject.' },
+                { id: 'E13', q: 'The word "bemused" means:', options: ['Amused', 'Confused', 'Entertained', 'Delighted'], answer: 1,
+                    explanation: 'Bemused means puzzled, confused, or bewildered—not amused. This is a frequently confused pair.' },
+                { id: 'E14', q: 'Which sentence uses "who" correctly?', options: ['Whom do you think will win?', 'Who did you give the book to?', 'To whom should I address the letter?',
+                        'Whom is coming to dinner?'
+                    ], answer: 2, explanation: '"Whom" is the object form; it follows prepositions like "to." "Who" is the subject form.' },
+                { id: 'E15', q: 'The phrase "toe the line" means:', options: ['To follow rules strictly', 'To dance gracefully', 'To cross a boundary', 'To walk on a tightrope'],
+                    answer: 0, explanation: '"Toe the line" means to conform to rules or standards. It is often mistakenly written as "tow the line."' },
+                { id: 'E16', q: 'Identify the error: "Between you and I, this is a secret."', options: ['Between', 'you and I', 'this is', 'a secret'], answer: 1,
+                    explanation: '"Between you and me" is correct because "me" is the object of the preposition "between."' },
+                { id: 'E17', q: 'The word "fortuitous" means:', options: ['Fortunate', 'Accidental', 'Lucky', 'Planned'], answer: 1,
+                    explanation: 'Fortuitous means happening by chance or accident—not necessarily lucky. It is often misused as a synonym for "fortunate."' },
+                { id: 'E18', q: 'Which of the following is a compound-complex sentence?', options: ['She went home.', 'She went home because she was tired, and she slept.',
+                        'Because she was tired, she slept.', 'She was tired, so she slept.'
+                    ], answer: 1, explanation: 'A compound-complex sentence has at least two independent clauses and one dependent clause. Option B has two independent clauses ("she went home" and "she slept") and one dependent ("because she was tired").' },
+                { id: 'E19', q: 'The term "nonplussed" means:', options: ['Unimpressed', 'Confused', 'Unconcerned', 'Unfazed'], answer: 1,
+                    explanation: 'Nonplussed means so surprised and confused that one is unsure how to react. In American English, it has evolved to mean unimpressed, but the original meaning is confusion.' },
+                { id: 'E20', q: 'Choose the correct sequence: "She ____ to the store when she ____ her friend."', options: ['went, sees', 'goes, saw', 'went, saw', 'has gone, sees'],
+                    answer: 2, explanation: 'Both actions are in the past, so simple past "went" and "saw" are correct.' }
+            ],
+            Mathematics: [
+                { id: 'M1', q: 'If f(x) = x³ − 6x² + 11x − 6, find the sum of the roots.', options: ['6', '−6', '11', '−11'], answer: 0,
+                    explanation: 'For a cubic ax³ + bx² + cx + d, sum of roots = −b/a. Here a=1, b=−6, so sum = 6.' },
+                { id: 'M2', q: 'Evaluate lim(x→0) (sin 3x)/(2x).', options: ['3/2', '2/3', '3', '1.5'], answer: 0,
+                    explanation: 'lim(x→0) sin(kx)/x = k. So sin(3x)/(2x) = (3/2)·sin(3x)/(3x) → 3/2.' },
+                { id: 'M3', q: 'The derivative of ln(x² + 1) is:', options: ['2x/(x²+1)', '1/(x²+1)', '2x', '2x ln(x²+1)'], answer: 0,
+                    explanation: 'Chain rule: d/dx ln(u) = u\'/u. u = x²+1, u\'=2x, so 2x/(x²+1).' },
+                { id: 'M4', q: 'Solve for x: log₂(x) + log₂(x−2) = 3.', options: ['4', '−2', '4 and −2', '2'], answer: 0,
+                    explanation: 'log₂[x(x−2)] = 3 ⇒ x(x−2)=8 ⇒ x²−2x−8=0 ⇒ (x−4)(x+2)=0. x=4 (since log undefined for negative).' },
+                { id: 'M5', q: 'The 7th term of the sequence 3, 6, 12, 24, … is:', options: ['96', '192', '128', '384'], answer: 1,
+                    explanation: 'Geometric sequence: aₙ = 3·2ⁿ⁻¹. a₇ = 3·2⁶ = 3·64 = 192.' },
+                { id: 'M6', q: 'If sin θ = 3/5 and θ is acute, then cos 2θ is:', options: ['7/25', '−7/25', '24/25', '−24/25'], answer: 0,
+                    explanation: 'cos θ = 4/5. cos 2θ = cos²θ − sin²θ = (16/25)−(9/25)=7/25.' },
+                { id: 'M7', q: 'The integral ∫ 2x·e^(x²) dx equals:', options: ['e^(x²) + C', '2e^(x²) + C', 'x² e^(x²) + C', 'e^(2x²) + C'], answer: 0,
+                    explanation: 'Let u = x², du = 2x dx. ∫ 2x e^(x²) dx = ∫ e^u du = e^u + C = e^(x²) + C.' },
+                { id: 'M8', q: 'Find the determinant: | 2 3 | | 4 5 |', options: ['−2', '2', '22', '−22'], answer: 0,
+                    explanation: 'det = (2·5) − (3·4) = 10 − 12 = −2.' },
+                { id: 'M9', q: 'If z = 2 + 3i, then |z|² is:', options: ['13', '5', '√13', '25'], answer: 0,
+                    explanation: '|z|² = 2² + 3² = 4 + 9 = 13.' },
+                { id: 'M10', q: 'The number of ways to arrange 5 distinct books on a shelf is:', options: ['120', '60', '25', '720'], answer: 0,
+                    explanation: '5! = 5×4×3×2×1 = 120.' },
+                { id: 'M11', q: 'Solve the system: 2x + y = 7, x − y = 2.', options: ['x=3, y=1', 'x=1, y=3', 'x=2, y=3', 'x=3, y=−1'], answer: 0,
+                    explanation: 'Add equations: 3x = 9 ⇒ x=3. Then 3−y=2 ⇒ y=1.' },
+                { id: 'M12', q: 'The probability of rolling a sum of 7 with two dice is:', options: ['1/6', '1/12', '1/36', '5/36'], answer: 0,
+                    explanation: 'There are 6 ways to get sum 7 out of 36 outcomes. 6/36 = 1/6.' },
+                { id: 'M13', q: 'If cos θ = −1/2 and θ is in quadrant II, then θ =:', options: ['120°', '60°', '240°', '300°'], answer: 0,
+                    explanation: 'In QII, cos is negative. cos 120° = −1/2.' },
+                { id: 'M14', q: 'The equation of the circle with center (2,−3) and radius 5 is:', options: ['(x−2)²+(y+3)²=25', '(x+2)²+(y−3)²=25', '(x−2)²+(y−3)²=25',
+                        '(x+2)²+(y+3)²=25'
+                    ], answer: 0, explanation: 'Standard form: (x−h)² + (y−k)² = r². Here h=2, k=−3, so (x−2)² + (y+3)² = 25.' },
+                { id: 'M15', q: 'If a = 2 and b = 3, then (a + b)² − (a² + b²) = ?', options: ['12', '6', '5', '0'], answer: 0,
+                    explanation: '(2+3)² − (4+9) = 25 − 13 = 12.' },
+                { id: 'M16', q: 'The sum of the first 10 positive integers is:', options: ['55', '50', '60', '45'], answer: 0,
+                    explanation: 'Sum = n(n+1)/2 = 10·11/2 = 55.' },
+                { id: 'M17', q: 'Find the value of x: 2^(x+1) = 16.', options: ['3', '4', '2', '5'], answer: 0,
+                    explanation: '2^(x+1) = 2⁴ ⇒ x+1=4 ⇒ x=3.' },
+                { id: 'M18', q: 'The slope of the line through (1,2) and (3,8) is:', options: ['3', '2', '6', '4'], answer: 0,
+                    explanation: 'slope = (8−2)/(3−1) = 6/2 = 3.' },
+                { id: 'M19', q: 'If f(x) = x² − 4x + 4, then f(2) = ?', options: ['0', '4', '2', '−4'], answer: 0,
+                    explanation: 'f(2) = 4 − 8 + 4 = 0.' },
+                { id: 'M20', q: 'The inverse of the matrix [ [1,2], [3,4] ] is:', options: ['[[-2,1],[1.5,-0.5]]', '[[4,-2],[-3,1]]', '[[2,-1],[-1.5,0.5]]', '[[-4,2],[3,-1]]'],
+                    answer: 0, explanation: 'det = 1·4−2·3 = −2. Inverse = (1/det)[[4,−2],[−3,1]] = [[−2,1],[1.5,−0.5]].' }
+            ],
+            Physics: [
+                { id: 'P1', q: 'A body moving with uniform acceleration covers 20 m in the 4th second and 30 m in the 6th second. Find the acceleration.', options: ['5 m/s²', '2.5 m/s²',
+                        '10 m/s²', '4 m/s²'
+                    ], answer: 0, explanation: 'Distance in nth second: Sₙ = u + a(n−0.5). S₄ − S₆ = 20 − 30 = −10 = a(4−0.5 − (6−0.5)) = a(−2) ⇒ a = 5 m/s².' },
+                { id: 'P2', q: 'Two resistors of 2Ω and 3Ω are in parallel. The equivalent resistance is:', options: ['1.2Ω', '5Ω', '6Ω', '1.5Ω'], answer: 0,
+                    explanation: '1/R = 1/2 + 1/3 = 5/6 ⇒ R = 6/5 = 1.2Ω.' },
+                { id: 'P3', q: 'The wavelength of a wave with frequency 500 Hz and speed 340 m/s is:', options: ['0.68 m', '1.47 m', '680 m', '0.34 m'], answer: 0,
+                    explanation: 'λ = v/f = 340/500 = 0.68 m.' },
+                { id: 'P4', q: 'A 2 kg object is dropped from rest. Its kinetic energy after falling 10 m is (g=10 m/s²):', options: ['200 J', '20 J', '100 J', '400 J'], answer: 0,
+                    explanation: 'KE = mgh = 2·10·10 = 200 J (conservation of energy).' },
+                { id: 'P5', q: 'The SI unit of magnetic flux is:', options: ['Tesla', 'Weber', 'Henry', 'Farad'], answer: 1,
+                    explanation: 'The weber (Wb) is the SI unit of magnetic flux.' },
+                { id: 'P6', q: 'A concave mirror has focal length 15 cm. An object is placed 20 cm from the mirror. The image is:', options: ['Real and inverted', 'Virtual and upright',
+                        'Real and upright', 'Virtual and inverted'
+                    ], answer: 0, explanation: '1/f = 1/v + 1/u, with u=−20, f=−15 ⇒ 1/v = −1/15 + 1/20 = (−4+3)/60 = −1/60 ⇒ v = −60 cm (real, inverted).' },
+                { id: 'P7', q: 'The efficiency of a Carnot engine operating between 127°C and 27°C is:', options: ['25%', '33%', '50%', '75%'], answer: 0,
+                    explanation: 'η = 1 − T_c/T_h = 1 − 300/400 = 0.25 = 25%. (T in Kelvin).' },
+                { id: 'P8', q: 'A charge of 2 C moves through a potential difference of 10 V. The work done is:', options: ['20 J', '5 J', '0.2 J', '10 J'], answer: 0,
+                    explanation: 'W = QV = 2·10 = 20 J.' },
+                { id: 'P9', q: 'The period of a simple pendulum of length 1 m on Earth (g=10 m/s²) is approximately:', options: ['2 s', '1 s', '0.5 s', '4 s'], answer: 0,
+                    explanation: 'T = 2π√(L/g) = 2π√(1/10) ≈ 1.987 ≈ 2 s.' },
+                { id: 'P10', q: 'Which quantity is a scalar?', options: ['Force', 'Velocity', 'Work', 'Momentum'], answer: 2,
+                    explanation: 'Work is a scalar (energy transfer). Force, velocity, and momentum are vectors.' },
+                { id: 'P11', q: 'A 5 kg mass is attached to a spring with k=200 N/m. The angular frequency (ω) is:', options: ['6.32 rad/s', '40 rad/s', '10 rad/s', '2 rad/s'],
+                    answer: 0, explanation: 'ω = √(k/m) = √(200/5) = √40 = 6.32 rad/s.' },
+                { id: 'P12', q: 'The speed of light in a medium of refractive index 1.5 is (c=3×10⁸ m/s):', options: ['2×10⁸ m/s', '4.5×10⁸ m/s', '3×10⁸ m/s', '1.5×10⁸ m/s'],
+                    answer: 0, explanation: 'v = c/n = 3×10⁸/1.5 = 2×10⁸ m/s.' },
+                { id: 'P13', q: 'A transformer has 100 primary turns and 200 secondary turns. If primary voltage is 220 V, secondary voltage is:', options: ['440 V', '110 V', '220 V',
+                        '880 V'
+                    ], answer: 0, explanation: 'V_s/V_p = N_s/N_p ⇒ V_s = 220·(200/100) = 440 V.' },
+                { id: 'P14', q: 'The heat required to raise the temperature of 2 kg of water from 20°C to 80°C is (c=4200 J/kg°C):', options: ['504 kJ', '252 kJ', '1008 kJ', '126 kJ'],
+                    answer: 0, explanation: 'Q = mcΔT = 2·4200·60 = 504,000 J = 504 kJ.' },
+                { id: 'P15', q: 'The gravitational potential energy of a 10 kg object at a height of 5 m is (g=10 m/s²):', options: ['500 J', '50 J', '1000 J', '250 J'], answer: 0,
+                    explanation: 'PE = mgh = 10·10·5 = 500 J.' },
+                { id: 'P16', q: 'In a circuit, the current is 2 A and resistance is 5 Ω. The voltage is:', options: ['10 V', '2.5 V', '20 V', '5 V'], answer: 0,
+                    explanation: 'V = IR = 2·5 = 10 V.' },
+                { id: 'P17', q: 'The force between two charges q₁ and q₂ separated by distance r is proportional to:', options: ['1/r²', '1/r', 'r²', 'r'], answer: 0,
+                    explanation: 'Coulomb\'s law: F ∝ q₁q₂/r².' },
+                { id: 'P18', q: 'A car accelerates from rest at 2 m/s² for 5 s. The distance covered is:', options: ['25 m', '10 m', '50 m', '20 m'], answer: 0,
+                    explanation: 's = ut + ½at² = 0 + ½·2·25 = 25 m.' },
+                { id: 'P19', q: 'The unit of power is:', options: ['Watt', 'Joule', 'Newton', 'Pascal'], answer: 0,
+                    explanation: 'The watt (W) is the SI unit of power.' },
+                { id: 'P20', q: 'Which of the following is not a state of matter?', options: ['Plasma', 'Bose-Einstein condensate', 'Neutronium', 'Radiation'], answer: 3,
+                    explanation: 'Radiation is energy, not a state of matter. Plasma, BEC, and neutronium are exotic states.' }
+            ],
+            Chemistry: [
+                { id: 'C1', q: 'The hybridization of carbon in ethyne (C₂H₂) is:', options: ['sp', 'sp²', 'sp³', 'sp³d'], answer: 0,
+                    explanation: 'Ethyne (acetylene) has a triple bond, each carbon is sp hybridized with linear geometry.' },
+                { id: 'C2', q: 'Which of the following has the highest electronegativity?', options: ['F', 'Cl', 'Br', 'I'], answer: 0,
+                    explanation: 'Fluorine is the most electronegative element (Pauling scale: 3.98).' },
+                { id: 'C3', q: 'The pH of a 0.01 M HCl solution is:', options: ['2', '12', '1', '4'], answer: 0,
+                    explanation: 'HCl is a strong acid, [H⁺] = 0.01 M, pH = −log(0.01) = 2.' },
+                { id: 'C4', q: 'Which compound exhibits geometric isomerism?', options: ['But-2-ene', 'But-1-ene', '2-methylpropene', 'Ethane'], answer: 0,
+                    explanation: 'But-2-ene (CH₃−CH=CH−CH₃) has cis-trans (geometric) isomerism because each double-bond carbon has two different groups.' },
+                { id: 'C5', q: 'The number of neutrons in ²⁴Mg²⁺ is:', options: ['12', '14', '10', '24'], answer: 0,
+                    explanation: '²⁴Mg has mass number 24, atomic number 12. Neutrons = 24 − 12 = 12. The charge does not affect neutron count.' },
+                { id: 'C6', q: 'Which of the following is a strong electrolyte?', options: ['NaCl', 'CH₃COOH', 'NH₃', 'H₂O'], answer: 0,
+                    explanation: 'NaCl is a strong electrolyte—it fully dissociates in water. Acetic acid is weak; NH₃ and H₂O are weak.' },
+                { id: 'C7', q: 'The oxidation state of Cr in K₂Cr₂O₇ is:', options: ['+6', '+3', '+7', '+5'], answer: 0,
+                    explanation: 'K: +1 (×2 = +2), O: −2 (×7 = −14). 2 + 2x −14 = 0 ⇒ 2x = 12 ⇒ x = +6.' },
+                { id: 'C8', q: 'Which bond is most polar?', options: ['H−F', 'H−Cl', 'H−Br', 'H−I'], answer: 0,
+                    explanation: 'Electronegativity difference is largest for H−F (4.0−2.1=1.9).' },
+                { id: 'C9', q: 'The product of the reaction between ethanoic acid and ethanol is:', options: ['Ethyl ethanoate', 'Ethanoic anhydride', 'Ethanol ethanoate',
+                        'Diethyl ether'
+                    ], answer: 0, explanation: 'Esterification: CH₃COOH + C₂H₅OH → CH₃COOC₂H₅ (ethyl ethanoate) + H₂O.' },
+                { id: 'C10', q: 'Which quantum number describes the shape of an orbital?', options: ['ℓ', 'n', 'mₗ', 'mₛ'], answer: 0,
+                    explanation: 'The azimuthal quantum number (ℓ) determines the shape of the orbital (s, p, d, f).' },
+                { id: 'C11', q: 'The molar mass of CaCO₃ is (Ca=40, C=12, O=16):', options: ['100 g/mol', '56 g/mol', '88 g/mol', '112 g/mol'], answer: 0,
+                    explanation: '40 + 12 + 3(16) = 40 + 12 + 48 = 100 g/mol.' },
+                { id: 'C12', q: 'Which of the following is an exothermic process?', options: ['Combustion of methane', 'Melting of ice', 'Boiling water', 'Photosynthesis'],
+                    answer: 0, explanation: 'Combustion releases heat (exothermic). Melting, boiling, and photosynthesis are endothermic.' },
+                { id: 'C13', q: 'The IUPAC name of CH₃CH₂CH₂CH₂OH is:', options: ['Butan-1-ol', 'Butan-2-ol', 'Butanol', '1-butanol'], answer: 0,
+                    explanation: 'The OH is on carbon 1 of a 4-carbon chain: butan-1-ol.' },
+                { id: 'C14', q: 'Which gas is produced when zinc reacts with dilute HCl?', options: ['H₂', 'Cl₂', 'ZnCl₂', 'O₂'], answer: 0,
+                    explanation: 'Zn + 2HCl → ZnCl₂ + H₂ (hydrogen gas).' },
+                { id: 'C15', q: 'The Aufbau principle states that:', options: ['Electrons fill lowest energy levels first', 'No two electrons have same 4 quantum numbers',
+                        'Electrons occupy orbitals singly first', 'Atomic orbitals have definite shapes'
+                    ], answer: 0, explanation: 'The Aufbau principle: electrons occupy orbitals in increasing order of energy (lowest first).' },
+                { id: 'C16', q: 'Which of the following is an aromatic hydrocarbon?', options: ['Benzene', 'Cyclohexane', 'Hexane', 'Butane'], answer: 0,
+                    explanation: 'Benzene (C₆H₆) is the classic aromatic hydrocarbon with a delocalized π system.' },
+                { id: 'C17', q: 'The concentration of 0.1 M NaOH solution in ppm (assuming density 1 g/mL) is:', options: ['4000 ppm', '40 ppm', '400 ppm', '4 ppm'], answer: 0,
+                    explanation: '0.1 M NaOH = 0.1 mol/L = 0.1×40 g/L = 4 g/L = 4000 mg/L = 4000 ppm.' },
+                { id: 'C18', q: 'Which is a reducing agent?', options: ['Na', 'Cl₂', 'KMnO₄', 'H₂O₂ (oxidizing)'], answer: 0,
+                    explanation: 'Sodium (Na) is a good reducing agent—it donates electrons and is oxidized.' },
+                { id: 'C19', q: 'The shape of NH₃ molecule is:', options: ['Trigonal pyramidal', 'Tetrahedral', 'Trigonal planar', 'Bent'], answer: 0,
+                    explanation: 'NH₃ has a trigonal pyramidal shape due to the lone pair on nitrogen (VSEPR theory).' },
+                { id: 'C20', q: 'Which of the following is a synthetic polymer?', options: ['Nylon', 'Cellulose', 'Starch', 'Protein'], answer: 0,
+                    explanation: 'Nylon is a synthetic polymer (polyamide). Cellulose, starch, and proteins are natural polymers.' }
+            ],
+            Biology: [
+                { id: 'B1', q: 'The organelle responsible for ATP production in eukaryotic cells is:', options: ['Mitochondrion', 'Chloroplast', 'Ribosome', 'Golgi apparatus'],
+                    answer: 0, explanation: 'Mitochondria are the powerhouses of the cell, producing ATP via oxidative phosphorylation.' },
+                { id: 'B2', q: 'Which is the smallest unit of life?', options: ['Cell', 'Tissue', 'Organ', 'Organism'], answer: 0,
+                    explanation: 'The cell is the basic structural and functional unit of all living organisms.' },
+                { id: 'B3', q: 'In humans, the diploid number of chromosomes is:', options: ['46', '23', '44', '48'], answer: 0,
+                    explanation: 'Humans have 46 chromosomes (23 pairs) in diploid somatic cells.' },
+                { id: 'B4', q: 'The process of converting glucose to pyruvate is called:', options: ['Glycolysis', 'Krebs cycle', 'Oxidative phosphorylation', 'Fermentation'],
+                    answer: 0, explanation: 'Glycolysis is the metabolic pathway that converts glucose (6C) to pyruvate (3C) in the cytoplasm.' },
+                { id: 'B5', q: 'Which of the following is not a feature of the phylum Chordata?', options: ['Notochord', 'Dorsal hollow nerve cord', 'Pharyngeal slits', 'Segmented body'],
+                    answer: 3,
+                    explanation: 'Segmented body is characteristic of Annelida and Arthropoda, not a defining feature of Chordata. Chordates have notochord, dorsal nerve cord, pharyngeal slits, and post-anal tail.' },
+                { id: 'B6', q: 'The part of the brain responsible for balance and coordination is:', options: ['Cerebellum', 'Cerebrum', 'Medulla oblongata', 'Hypothalamus'],
+                    answer: 0, explanation: 'The cerebellum coordinates voluntary movements, balance, and motor learning.' },
+                { id: 'B7', q: 'In a DNA molecule, adenine pairs with:', options: ['Thymine', 'Cytosine', 'Guanine', 'Uracil'], answer: 0,
+                    explanation: 'In DNA, adenine (A) pairs with thymine (T) via two hydrogen bonds.' },
+                { id: 'B8', q: 'The primary function of red blood cells is:', options: ['Oxygen transport', 'Immune defense', 'Clotting', 'Nutrient transport'], answer: 0,
+                    explanation: 'RBCs (erythrocytes) contain hemoglobin and transport oxygen from lungs to tissues.' },
+                { id: 'B9', q: 'Which hormone regulates blood glucose levels by promoting uptake into cells?', options: ['Insulin', 'Glucagon', 'Adrenaline', 'Thyroxine'],
+                    answer: 0, explanation: 'Insulin promotes cellular glucose uptake and lowers blood sugar. Glucagon raises blood sugar.' },
+                { id: 'B10', q: 'The type of muscle found in the heart is:', options: ['Cardiac muscle', 'Skeletal muscle', 'Smooth muscle', 'Striated voluntary'], answer: 0,
+                    explanation: 'Cardiac muscle is involuntary, striated, and found only in the heart.' },
+                { id: 'B11', q: 'The process by which plants lose water vapor from leaves is:', options: ['Transpiration', 'Photosynthesis', 'Respiration', 'Guttation'], answer: 0,
+                    explanation: 'Transpiration is the loss of water vapor from plant leaves through stomata.' },
+                { id: 'B12', q: 'Which is not a type of RNA?', options: ['mRNA', 'tRNA', 'rRNA', 'dRNA'], answer: 3,
+                    explanation: 'dRNA is not a standard type; the three main RNAs are mRNA, tRNA, and rRNA.' },
+                { id: 'B13', q: 'The human kidney is part of which system?', options: ['Excretory', 'Digestive', 'Circulatory', 'Respiratory'], answer: 0,
+                    explanation: 'The kidneys are the primary organs of the excretory (urinary) system.' },
+                { id: 'B14', q: 'Which of the following is a prokaryotic organism?', options: ['E. coli', 'Yeast', 'Amoeba', 'Paramecium'], answer: 0,
+                    explanation: 'E. coli is a bacterium (prokaryote). Yeast, Amoeba, and Paramecium are eukaryotes.' },
+                { id: 'B15', q: 'The function of stomata in plants is:', options: ['Gas exchange', 'Photosynthesis', 'Water absorption', 'Mineral transport'], answer: 0,
+                    explanation: 'Stomata regulate gas exchange (CO₂ in, O₂ out) and water vapor (transpiration).' },
+                { id: 'B16', q: 'Which blood type is the universal recipient?', options: ['AB+', 'O−', 'A+', 'B+'], answer: 0,
+                    explanation: 'AB+ individuals have no antibodies to A, B, or Rh antigens, so they can receive any blood type.' },
+                { id: 'B17', q: 'The process of making a copy of DNA is called:', options: ['Replication', 'Transcription', 'Translation', 'Transduction'], answer: 0,
+                    explanation: 'DNA replication is the process of producing two identical copies from one DNA molecule.' },
+                { id: 'B18', q: 'Which vitamin is produced by the human body upon exposure to sunlight?', options: ['Vitamin D', 'Vitamin C', 'Vitamin B12', 'Vitamin A'],
+                    answer: 0, explanation: 'Vitamin D (cholecalciferol) is synthesized in the skin upon UVB exposure.' },
+                { id: 'B19', q: 'The smallest bone in the human body is:', options: ['Stapes', 'Malleus', 'Incus', 'Patella'], answer: 0,
+                    explanation: 'The stapes (stirrup) in the middle ear is the smallest bone, about 3 mm long.' },
+                { id: 'B20', q: 'Which of the following is a genetic disorder?', options: ['Down syndrome', 'Malaria', 'Tuberculosis', 'Cholera'], answer: 0,
+                    explanation: 'Down syndrome (trisomy 21) is a genetic/chromosomal disorder. The others are infectious diseases.' }
+            ],
+            "General Paper": [
+                { id: 'G1', q: 'The Federal Republic of Nigeria operates a presidential system of government similar to which country?', options: ['United States', 'United Kingdom',
+                        'France', 'China'
+                    ], answer: 0, explanation: 'Nigeria\'s presidential system is modeled after the United States, with a directly elected president and separation of powers.' },
+                { id: 'G2', q: 'The concept of "rule of law" was popularized by:', options: ['A.V. Dicey', 'John Locke', 'Thomas Hobbes', 'Jean-Jacques Rousseau'], answer: 0,
+                    explanation: 'A.V. Dicey, a British jurist, is credited with popularizing the concept of the rule of law in his 1885 book "Introduction to the Study of the Law of the Constitution."' },
+                { id: 'G3', q: 'Which of the following is a greenhouse gas?', options: ['Methane', 'Oxygen', 'Nitrogen', 'Argon'], answer: 0,
+                    explanation: 'Methane (CH₄) is a potent greenhouse gas. Oxygen, nitrogen, and argon are not significant greenhouse gases.' },
+                { id: 'G4', q: 'The highest decision-making body in the United Nations is:', options: ['General Assembly', 'Security Council', 'International Court of Justice',
+                        'Secretariat'
+                    ], answer: 1,
+                    explanation: 'The UN Security Council is the most powerful body, responsible for maintaining international peace and security. The General Assembly is the main deliberative body but its resolutions are not binding.' },
+                { id: 'G5', q: 'Which Nigerian author won the Nobel Prize in Literature?', options: ['Wole Soyinka', 'Chinua Achebe', 'Buchi Emecheta', 'Ben Okri'], answer: 0,
+                    explanation: 'Wole Soyinka won the Nobel Prize in Literature in 1986, the first African to do so.' },
+                { id: 'G6', q: 'The theory of separation of powers is associated with:', options: ['Montesquieu', 'Rousseau', 'Locke', 'Hobbes'], answer: 0,
+                    explanation: 'Montesquieu, in his work "The Spirit of the Laws," articulated the theory of separation of powers into legislative, executive, and judicial branches.' },
+                { id: 'G7', q: 'Which of the following is not a member of the BRICS group?', options: ['Nigeria', 'Brazil', 'Russia', 'China'], answer: 0,
+                    explanation: 'BRICS comprises Brazil, Russia, India, China, and South Africa. Nigeria is not a member.' },
+                { id: 'G8', q: 'The organ responsible for human vision is the:', options: ['Eye', 'Ear', 'Nose', 'Skin'], answer: 0,
+                    explanation: 'The eye is the organ of vision, detecting light and converting it into neural signals.' },
+                { id: 'G9', q: 'The term "pros and cons" is derived from:', options: ['Latin', 'Greek', 'French', 'German'], answer: 0,
+                    explanation: '"Pros and cons" comes from the Latin "pro et contra," meaning "for and against."' },
+                { id: 'G10', q: 'Which of the following is a renewable energy source?', options: ['Solar power', 'Coal', 'Natural gas', 'Nuclear fission'], answer: 0,
+                    explanation: 'Solar power is renewable. Coal, natural gas, and nuclear fission are non-renewable.' },
+                { id: 'G11', q: 'The Nigerian currency is the:', options: ['Naira', 'Cedi', 'Kobo', 'Shilling'], answer: 0,
+                    explanation: 'The naira (₦) is the official currency of Nigeria, subdivided into 100 kobo.' },
+                { id: 'G12', q: 'The first computer programmer is widely considered to be:', options: ['Ada Lovelace', 'Alan Turing', 'Charles Babbage', 'Grace Hopper'], answer: 0,
+                    explanation: 'Ada Lovelace is regarded as the first computer programmer for her work on Charles Babbage\'s Analytical Engine in the 1840s.' },
+                { id: 'G13', q: 'Which of the following is not a fundamental human right?', options: ['Right to free education', 'Right to life', 'Right to liberty',
+                        'Right to freedom of thought'
+                    ], answer: 0,
+                    explanation: 'While education is important, the "right to free education" is not universally recognized as a fundamental human right in the same way as life, liberty, and thought.' },
+                { id: 'G14', q: 'The largest ocean on Earth is:', options: ['Pacific Ocean', 'Atlantic Ocean', 'Indian Ocean', 'Arctic Ocean'], answer: 0,
+                    explanation: 'The Pacific Ocean is the largest, covering about 63 million square miles (165 million km²).' },
+                { id: 'G15', q: 'The process of voting to remove an elected official from office is called:', options: ['Impeachment', 'Recall', 'Referendum', 'Plebiscite'],
+                    answer: 1,
+                    explanation: 'Recall is a process by which voters can remove an elected official before the end of their term. Impeachment is a legislative process that can lead to removal.' },
+                { id: 'G16', q: 'Which of the following is a form of government where power is held by a small group?', options: ['Oligarchy', 'Democracy', 'Monarchy', 'Theocracy'],
+                    answer: 0, explanation: 'Oligarchy means rule by a small, elite group. Democracy is rule by the people; monarchy is rule by a single hereditary ruler.' },
+                { id: 'G17', q: 'The UNILAG motto is:', options: ['In Deo Veritas', 'In God We Trust', 'Knowledge for Service', 'Excellence and Integrity'], answer: 0,
+                    explanation: 'The University of Lagos motto is "In Deo Veritas" (Truth in God).' },
+                { id: 'G18', q: 'Which of the following is not a type of intellectual property?', options: ['Copyright', 'Patent', 'Trademark', 'License'], answer: 3,
+                    explanation: 'Copyright, patents, and trademarks are forms of intellectual property. A license is a permission to use property, not a type of IP itself.' },
+                { id: 'G19', q: 'The process of converting a solid directly to a gas is called:', options: ['Sublimation', 'Condensation', 'Vaporization', 'Deposition'], answer: 0,
+                    explanation: 'Sublimation is the transition from solid to gas without passing through a liquid phase. Deposition is gas to solid.' },
+                { id: 'G20', q: 'Which of the following is a social media platform?', options: ['Twitter', 'Google', 'Yahoo', 'Bing'], answer: 0,
+                    explanation: 'Twitter (X) is a social media platform. Google, Yahoo, and Bing are search engines.' }
+            ]
+        };
 
-    <div class="question-card">
-      <div class="subject-tag" id="subjectLabel"></div>
-      <div class="question-text" id="questionText"></div>
-      <div class="options" id="optionsContainer"></div>
-      <div class="nav-row">
-        <button class="btn" onclick="prevQuestion()" id="prevBtn">Previous</button>
-        <button class="btn" onclick="nextQuestion()" id="nextBtn">Next</button>
-      </div>
-      <div class="palette" id="paletteContainer"></div>
-      <button class="btn btn-danger" style="margin-top:14px;" onclick="submitExam()">Submit</button>
-    </div>
-  </div>
+        // ============================================================
+        // 3. STATE
+        // ============================================================
+        const state = {
+            user: null,
+            selectedSubjects: [],
+            questions: [], // flat array of all exam questions (shuffled)
+            currentIndex: 0,
+            answers: {}, // { questionId: selectedOptionIndex }
+            timerSeconds: 0,
+            timerInterval: null,
+            totalTime: 0, // in minutes
+            submitted: false,
+            results: null,
+        };
 
-  <div class="container result-wrap hidden" id="resultScreen">
-    <div class="title">Exam Result</div>
-    <div class="score-big" id="scorePercentDisplay">0%</div>
-    <div class="score-sub" id="scoreMeta">0 correct out of 0</div>
+        const SUBJECTS = ['English', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'General Paper'];
+        const QUESTIONS_PER_SUBJECT = 20;
+        const DEFAULT_TIME = 120; // minutes
 
-    <div class="review-title">Review</div>
-    <div class="review-list" id="reviewContainer"></div>
-  </div>
+        // ============================================================
+        // 4. DOM REFS
+        // ============================================================
+        const $ = id => document.getElementById(id);
+        const screens = {
+            login: $('screen-login'),
+            subjects: $('screen-subjects'),
+            instructions: $('screen-instructions'),
+            exam: $('screen-exam'),
+            results: $('screen-results'),
+        };
+        const toast = $('toast');
 
-  <script>
-    // =========================
-    // EmailJS
-    // =========================
-    (function () {
-      emailjs.init("mt3HJUIfu1kcIMjGb");
-    })();
-
-    // =========================
-    // Utility
-    // =========================
-    function shuffleArray(arr) {
-      const copy = [...arr];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
-    }
-
-    function optionLetter(index) {
-      return String.fromCharCode(65 + index);
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    // =========================
-    // Question banks
-    // =========================
-    const subjectBanks = {
-      Mathematics: [
-        { q: "Simplify: (a⁻² - b⁻²) ÷ (a⁻¹ + b⁻¹)", options: ["a - b", "b - a", "(b - a)/ab", "(a - b)/(ab)"], ans: 2, explanation: "Rewrite using common denominators. The expression reduces to (b - a)/ab." },
-        { q: "If log₂(x+3) + log₂(x-1) = 3, find x.", options: ["2", "3", "5", "7"], ans: 2, explanation: "Combine logs: (x+3)(x-1)=8, giving x²+2x-11=0. The valid positive answer is 3? Check directly: x=3 gives 6×2=12. x=5 gives 8×4=32. The correct solution is x=3? No. Since this is a CBT item, avoid ambiguous roots. Use x=3? Better replace in the code below? Wait. We will use a corrected equation in the final set." },
-        { q: "The 5th term of an A.P. is 11 and the 9th term is 19. Find the common difference.", options: ["2", "3", "4", "6"], ans: 0, explanation: "a+4d=11 and a+8d=19. Subtract: 4d=8, so d=2." },
-        { q: "A fair die is rolled twice. What is the probability that the sum is at least 8?", options: ["5/36", "1/6", "5/12", "15/36"], ans: 2, explanation: "Favourable outcomes = 15 out of 36, so probability = 15/36 = 5/12." },
-        { q: "If sin θ = 3/5 and θ is acute, find tan(90° - θ).", options: ["3/4", "4/3", "5/4", "5/3"], ans: 1, explanation: "tan(90°-θ)=cot θ = 4/3." },
-        { q: "25^(3/2) ÷ 5² equals:", options: ["5", "25", "125", "625"], ans: 0, explanation: "25^(3/2)=125 and 125 ÷ 25 = 5." },
-        { q: "Solve: (2x - 3)/5 = (x + 6)/4", options: ["14", "42", "9", "18"], ans: 0, explanation: "Cross-multiply: 8x - 12 = 5x + 30, so 3x = 42 and x = 14." },
-        { q: "If 2^(3x) ÷ 4^(x-1) = 16, find x.", options: ["1", "2", "3", "4"], ans: 1, explanation: "4^(x-1)=2^(2x-2). Then 2^(3x)/2^(2x-2)=2^(x+2)=16=2^4, so x=2." },
-        { q: "Find the sum of the roots of 2x² - 5x + 3 = 0.", options: ["5/2", "-5/2", "3/2", "-3/2"], ans: 0, explanation: "Sum of roots = -b/a = 5/2." },
-        { q: "If y varies inversely as x² and y = 8 when x = 2, find y when x = 4.", options: ["2", "4", "1", "0.5"], ans: 0, explanation: "y = k/x². Since 8 = k/4, k = 32. Then y = 32/16 = 2." },
-        { q: "The bearing of X from Y is 065°. What is the bearing of Y from X?", options: ["245°", "115°", "065°", "295°"], ans: 0, explanation: "Back bearing = 065° + 180° = 245°." },
-        { q: "Factorize: 6x² - 7x - 5", options: ["(3x+5)(2x-1)", "(2x-5)(3x+1)", "(6x+5)(x-1)", "(3x-5)(2x+1)"], ans: 3, explanation: "(3x - 5)(2x + 1) = 6x² - 7x - 5." },
-        { q: "A sector has radius 14 cm and angle 120°. Find the area. Use π = 22/7.", options: ["205.33 cm²", "102.67 cm²", "308 cm²", "154 cm²"], ans: 0, explanation: "Area = (120/360) × π × 14² = (1/3) × 196 × 22/7 = 205.33 cm²." },
-        { q: "Solve |2x - 3| ≤ 5.", options: ["-1 ≤ x ≤ 4", "x ≤ -1 or x ≥ 4", "-4 ≤ x ≤ 1", "x ≥ 4"], ans: 0, explanation: "-5 ≤ 2x - 3 ≤ 5, so -2 ≤ 2x ≤ 8, hence -1 ≤ x ≤ 4." },
-        { q: "If √(x + 3) = 4, find x.", options: ["13", "19", "16", "7"], ans: 0, explanation: "x + 3 = 16, therefore x = 13." },
-        { q: "Find the gradient of the line joining (2, 5) and (-3, -5).", options: ["2", "-2", "10", "0"], ans: 0, explanation: "Gradient = (-5 - 5)/(-3 - 2) = -10/-5 = 2." },
-        { q: "In how many ways can 4 students be seated in 4 chairs?", options: ["24", "12", "16", "4"], ans: 0, explanation: "Number of arrangements = 4! = 24." },
-        { q: "If sin θ = 0.6 and cos θ < 0, find tan θ.", options: ["-4/3", "-3/4", "3/4", "4/3"], ans: 1, explanation: "sin positive and cos negative means quadrant II. tan = -3/4." },
-        { q: "The mean of 5 numbers is 8. If four numbers are 6, 7, 9 and 10, the fifth is:", options: ["8", "10", "12", "14"], ans: 0, explanation: "Total sum = 5 × 8 = 40. Known sum = 32. Missing number = 8." },
-        { q: "Differentiate y = 3x² - 4x + 7.", options: ["6x - 4", "3x - 4", "6x + 7", "6x + 4"], ans: 0, explanation: "dy/dx = 6x - 4." }
-      ],
-
-      English: [
-        { q: "Choose the option nearest in meaning to: recondite", options: ["irrelevant", "obscure", "witty", "offensive"], ans: 1, explanation: "Recondite means difficult to understand or obscure." },
-        { q: "Select the antonym of abortive.", options: ["successful", "costly", "dangerous", "secret"], ans: 0, explanation: "Abortive means unsuccessful or incomplete." },
-        { q: "Fill the gap: The committee ______ divided in its opinions.", options: ["were", "was", "has been", "are being"], ans: 1, explanation: "Committee is singular here, so the verb is 'was'." },
-        { q: "Identify the sentence with a dangling modifier.", options: ["Driving through the forest, many trees were seen.", "While I was driving through the forest, I saw many trees.", "Many trees were visible as we drove through the forest.", "The forest was full of trees that we saw while driving."], ans: 0, explanation: "The phrase 'Driving through the forest' wrongly attaches to 'many trees'." },
-        { q: "Her acerbic remarks during the meeting ______.", options: ["encouraged harmony", "lightened the mood", "offended several colleagues", "were full of praise"], ans: 2, explanation: "Acerbic means sharply critical or biting." },
-        { q: "Choose the nearest meaning of ephemeral.", options: ["everlasting", "transient", "fragile", "recurring"], ans: 1, explanation: "Ephemeral means short-lived." },
-        { q: "Which sentence is grammatically correct?", options: ["Neither the manager nor his assistants was present.", "Neither the manager nor his assistants were present.", "Neither the manager or his assistants were present.", "Neither manager nor assistants was present."], ans: 1, explanation: "The nearer subject is 'assistants', so 'were' is correct." },
-        { q: "Fill the gap: The witness refused to ______ the accused.", options: ["testify against", "testify for", "witness for", "prosecute"], ans: 0, explanation: "To testify against someone means to give evidence against them." },
-        { q: "Choose the best word: The doctor's ______ diagnosis saved the patient's life.", options: ["hasty", "accurate", "casual", "vague"], ans: 1, explanation: "An accurate diagnosis is correct and reliable." },
-        { q: "Antonym of benevolent.", options: ["Malevolent", "Generous", "Kind", "Philanthropic"], ans: 0, explanation: "Benevolent means kind and good-hearted." },
-        { q: "Which is correctly spelt?", options: ["Occurrence", "Occurence", "Ocurrence", "Occurrance"], ans: 0, explanation: "Occurrence is the correct spelling." },
-        { q: "Select the option nearest in meaning to cacophony.", options: ["Melody", "Discord", "Harmony", "Rhythm"], ans: 1, explanation: "Cacophony means harsh or unpleasant sound." },
-        { q: "Fill the gap: If I ______ you, I would accept the offer.", options: ["was", "were", "am", "be"], ans: 1, explanation: "The subjunctive form is 'If I were'." },
-        { q: "Identify the error: Each of the students have submitted their assignment.", options: ["Each", "have", "their", "assignment"], ans: 1, explanation: "Each is singular, so the verb should be 'has'." },
-        { q: "Choose the most appropriate option: The teacher asked the student why ______ late.", options: ["he was", "was he", "is he", "he is"], ans: 0, explanation: "Indirect questions use normal word order." },
-        { q: "Antonym of copious.", options: ["Abundant", "Scarce", "Plentiful", "Ample"], ans: 1, explanation: "Copious means plentiful." },
-        { q: "Nearest meaning of lethargic.", options: ["Energetic", "Sluggish", "Alert", "Active"], ans: 1, explanation: "Lethargic means slow and inactive." },
-        { q: "Choose the correct sentence.", options: ["The man, together with his wives, were present.", "The man, together with his wives, are present.", "The man, together with his wives, was present.", "The man together with his wives have present."], ans: 2, explanation: "The main subject is 'man', so singular verb 'was' is correct." },
-        { q: "Select the correct punctuation: Did you see the movie?' she asked.", options: ["Correct as is", "Change ? to .", "Add comma after movie", "Remove quotes"], ans: 0, explanation: "The sentence is correctly punctuated." },
-        { q: "Choose the best interpretation: 'to turn a deaf ear' means to ______.", options: ["ignore", "listen carefully", "be deaf", "respond slowly"], ans: 0, explanation: "The idiom means to deliberately ignore." }
-      ],
-
-      Physics: [
-        { q: "A body projected at 45° has a constant horizontal velocity because ______.", options: ["vertical acceleration is zero", "horizontal acceleration is zero", "gravity is zero", "speed is zero"], ans: 1, explanation: "In ideal projectile motion, horizontal acceleration is zero." },
-        { q: "2Ω and 3Ω resistors are connected in parallel across 6V. The total power is:", options: ["6W", "12W", "18W", "30W"], ans: 3, explanation: "R = 1.2Ω, so P = V²/R = 36/1.2 = 30W." },
-        { q: "An object is 10 cm from a convex lens of focal length 15 cm. The image distance is:", options: ["-30 cm (virtual)", "30 cm (real)", "6 cm (real)", "6 cm (virtual)"], ans: 0, explanation: "Using the lens formula gives v = -30 cm, so the image is virtual." },
-        { q: "If the half-life of a substance is 10 years, the fraction remaining after 30 years is:", options: ["1/3", "1/6", "1/8", "1/2"], ans: 2, explanation: "30 years is 3 half-lives, so fraction remaining is (1/2)^3 = 1/8." },
-        { q: "A transformer has 500 turns in the primary and 50 in the secondary. If input voltage is 240V, output voltage is:", options: ["24V", "12V", "2400V", "48V"], ans: 0, explanation: "Vs/Vp = Ns/Np, so Vs = 240 × 50/500 = 24V." },
-        { q: "Light bends in a prism mainly because of:", options: ["reflection", "diffraction", "dispersion", "interference"], ans: 2, explanation: "Different wavelengths refract by different amounts, causing dispersion." },
-        { q: "The highest frequency among these electromagnetic waves is:", options: ["Ultraviolet", "X-rays", "Gamma rays", "Infrared"], ans: 2, explanation: "Gamma rays have the highest frequency." },
-        { q: "For a particle moving in a circle with constant speed, velocity and acceleration are:", options: ["parallel", "anti-parallel", "perpendicular", "same direction"], ans: 2, explanation: "Velocity is tangential, acceleration is centripetal, so they are perpendicular." },
-        { q: "A force of 10 N moves an object 5 m in the same direction. Work done is:", options: ["2 J", "15 J", "50 J", "0.5 J"], ans: 2, explanation: "Work = force × distance = 10 × 5 = 50 J." },
-        { q: "Which of these is a scalar quantity?", options: ["Velocity", "Acceleration", "Momentum", "Speed"], ans: 3, explanation: "Speed has magnitude only." },
-        { q: "The SI unit of electric charge is:", options: ["Ampere", "Volt", "Coulomb", "Ohm"], ans: 2, explanation: "Electric charge is measured in coulombs." },
-        { q: "An object weighs 30 N on Earth. Its mass is approximately (g = 10 m/s²):", options: ["3 kg", "30 kg", "300 kg", "0.3 kg"], ans: 0, explanation: "Mass = weight/g = 30/10 = 3 kg." },
-        { q: "A wire of resistance 4Ω is stretched to twice its length. Its new resistance is:", options: ["8Ω", "16Ω", "2Ω", "4Ω"], ans: 1, explanation: "For constant volume, resistance becomes proportional to length squared." },
-        { q: "Sound waves in air are:", options: ["transverse", "longitudinal", "electromagnetic", "torsional"], ans: 1, explanation: "Sound in air travels as longitudinal waves." },
-        { q: "Which mirror forms a virtual diminished image?", options: ["Concave", "Convex", "Plane", "Parabolic"], ans: 1, explanation: "A convex mirror always forms a virtual diminished image." },
-        { q: "A body moving with uniform velocity has:", options: ["acceleration", "constant speed", "varying speed", "zero displacement"], ans: 1, explanation: "Uniform velocity means constant speed in a fixed direction." },
-        { q: "The energy stored in a capacitor is:", options: ["½CV²", "CV²", "QV", "½QV"], ans: 0, explanation: "Stored energy = ½CV²." },
-        { q: "If the frequency of a wave is 50 Hz, its period is:", options: ["0.02 s", "0.2 s", "2 s", "50 s"], ans: 0, explanation: "T = 1/f = 1/50 = 0.02 s." },
-        { q: "Which of these is a good electrical conductor?", options: ["Glass", "Rubber", "Copper", "Plastic"], ans: 2, explanation: "Copper has many free electrons and conducts well." },
-        { q: "A car accelerates from rest at 2 m/s² for 5 s. Final velocity is:", options: ["10 m/s", "5 m/s", "7 m/s", "25 m/s"], ans: 0, explanation: "v = u + at = 0 + 2 × 5 = 10 m/s." }
-      ],
-
-      Chemistry: [
-        { q: "If pH changes from 3 to 5, the hydrogen ion concentration has:", options: ["doubled", "increased tenfold", "decreased 100-fold", "remained constant"], ans: 2, explanation: "An increase of 2 pH units means [H⁺] decreases by 10² = 100." },
-        { q: "Which has the largest first ionization energy: Na, Mg, Al, Si?", options: ["Na", "Mg", "Al", "Si"], ans: 3, explanation: "Ionization energy generally increases across the period, with Si highest among the options." },
-        { q: "The bond angle in water is approximately:", options: ["109.5°", "120°", "104.5°", "180°"], ans: 2, explanation: "H₂O has a bent shape with bond angle about 104.5°." },
-        { q: "Oxidation number of Mn in KMnO₄ is:", options: ["+5", "+6", "+7", "+4"], ans: 2, explanation: "K is +1 and O is -2 each; Mn must be +7." },
-        { q: "2 g of NaOH is dissolved in 500 mL of solution. Find the molarity. (Molar mass = 40)", options: ["0.05 M", "0.1 M", "1.0 M", "0.2 M"], ans: 1, explanation: "Moles = 2/40 = 0.05. Volume = 0.5 L. Molarity = 0.05/0.5 = 0.1 M." },
-        { q: "Which molecule is linear?", options: ["H₂O", "CO₂", "NH₃", "CH₄"], ans: 1, explanation: "CO₂ is linear because the central carbon has no lone pair." },
-        { q: "Saponification is the hydrolysis of an ester with:", options: ["dilute acid", "concentrated acid", "alkali", "water only"], ans: 2, explanation: "Saponification occurs in alkaline medium." },
-        { q: "In electrolysis of dilute NaCl with inert electrodes, the gas at the anode is:", options: ["Hydrogen", "Oxygen", "Chlorine", "Sodium"], ans: 1, explanation: "Dilute solution tends to produce oxygen at the anode." },
-        { q: "Which of these is a strong acid?", options: ["CH₃COOH", "H₂CO₃", "HCl", "H₃PO₄"], ans: 2, explanation: "Hydrochloric acid is a strong acid." },
-        { q: "The number of neutrons in ²³₁₁Na is:", options: ["11", "12", "23", "34"], ans: 1, explanation: "Neutrons = mass number - atomic number = 23 - 11 = 12." },
-        { q: "Isotopes have the same number of:", options: ["protons", "neutrons", "electrons + neutrons", "nucleons"], ans: 0, explanation: "Isotopes are atoms of the same element, so they have the same proton number." },
-        { q: "Which gas is commonly used in welding?", options: ["Oxygen", "Acetylene", "Nitrogen", "Hydrogen"], ans: 1, explanation: "Acetylene is used in oxy-acetylene welding." },
-        { q: "A catalyst increases reaction rate by:", options: ["increasing activation energy", "decreasing activation energy", "changing equilibrium permanently", "increasing temperature"], ans: 1, explanation: "Catalysts provide an alternative pathway with lower activation energy." },
-        { q: "The pH of pure water at 25°C is:", options: ["0", "7", "14", "1"], ans: 1, explanation: "Pure water is neutral at pH 7." },
-        { q: "Which element has the electronic configuration 2,8,1?", options: ["Sodium", "Magnesium", "Aluminium", "Potassium"], ans: 0, explanation: "Sodium has 11 electrons arranged as 2,8,1." },
-        { q: "Rusting requires:", options: ["oxygen only", "water only", "oxygen and water", "carbon dioxide"], ans: 2, explanation: "Both oxygen and water are needed for rusting." },
-        { q: "Which of these is an alkali?", options: ["HCl", "NaOH", "H₂SO₄", "CH₃COOH"], ans: 1, explanation: "NaOH is a soluble base, hence an alkali." },
-        { q: "Avogadro's number is approximately:", options: ["6.02 × 10²³", "3.01 × 10²³", "1.6 × 10⁻¹⁹", "9.11 × 10⁻³¹"], ans: 0, explanation: "Avogadro's constant is about 6.02 × 10²³ mol⁻¹." },
-        { q: "The gas produced when zinc reacts with dilute HCl is:", options: ["Oxygen", "Chlorine", "Hydrogen", "Carbon dioxide"], ans: 2, explanation: "Metal + dilute acid gives salt + hydrogen gas." },
-        { q: "An organic compound containing the -OH group is a/an:", options: ["Alkane", "Alcohol", "Aldehyde", "Ketone"], ans: 1, explanation: "The hydroxyl group defines alcohols." }
-      ],
-
-      Biology: [
-        { q: "In a dihybrid cross TtRr × TtRr, the proportion with at least one recessive trait is:", options: ["1/16", "3/16", "7/16", "9/16"], ans: 2, explanation: "Only 9/16 are double-dominant, so at least one recessive = 7/16." },
-        { q: "Which organelle is responsible for autophagy?", options: ["Ribosome", "Golgi body", "Lysosome", "Peroxisome"], ans: 2, explanation: "Lysosomes contain hydrolytic enzymes for digestion of worn-out cell parts." },
-        { q: "The climax community of a region is largely determined by:", options: ["temperature only", "rainfall only", "edaphic factors", "climate"], ans: 3, explanation: "Climate determines the final stable community in a biome." },
-        { q: "Protein amino acid sequence is determined by:", options: ["DNA template strand sequence", "number of ribosomes", "type of tRNA", "transcription rate"], ans: 0, explanation: "The DNA sequence determines the mRNA sequence and hence amino acids." },
-        { q: "A father with blood group A (heterozygous) and a mother with blood group B (heterozygous) can produce which blood groups?", options: ["A only", "B only", "AB and O only", "A, B, AB and O"], ans: 3, explanation: "IAi × IBi can produce IAIB, IAi, IBi and ii." },
-        { q: "The logistic growth curve is:", options: ["J-shaped", "S-shaped", "linear", "bell-shaped"], ans: 1, explanation: "Population growth becomes S-shaped when resources are limited." },
-        { q: "Which is an example of convergent evolution?", options: ["Darwin's finches", "Bat and bird wings", "Dog breeds", "Peppered moths"], ans: 1, explanation: "Bat wings and bird wings serve similar functions but evolved independently." },
-        { q: "The final electron acceptor in aerobic respiration is:", options: ["NAD⁺", "FAD", "oxygen", "CO₂"], ans: 2, explanation: "Oxygen accepts electrons at the end of the electron transport chain." },
-        { q: "Which organelle packages proteins for secretion?", options: ["Ribosome", "Golgi apparatus", "Lysosome", "Mitochondria"], ans: 1, explanation: "The Golgi apparatus modifies, packages and distributes proteins." },
-        { q: "Which process occurs in the mitochondrion?", options: ["Glycolysis", "Krebs cycle", "Fermentation", "Photosynthesis"], ans: 1, explanation: "Krebs cycle takes place in the mitochondrial matrix." },
-        { q: "A plant cell placed in a hypertonic solution will:", options: ["swell", "burst", "become turgid", "plasmolyse"], ans: 3, explanation: "Water leaves the cell, causing plasmolysis." },
-        { q: "The waxy cuticle on leaves reduces:", options: ["photosynthesis", "water loss", "gas exchange", "light absorption"], ans: 1, explanation: "The cuticle limits transpiration." },
-        { q: "Mendel's law of segregation states that alleles separate during:", options: ["fertilization", "mitosis", "gamete formation", "embryo development"], ans: 2, explanation: "Alleles separate during meiosis when gametes are formed." },
-        { q: "Which blood component transports oxygen?", options: ["White blood cells", "Platelets", "Plasma", "Red blood cells"], ans: 3, explanation: "Red blood cells contain haemoglobin which carries oxygen." },
-        { q: "The functional unit of the kidney is the:", options: ["Neuron", "Alveolus", "Nephron", "Villus"], ans: 2, explanation: "The nephron is the structural and functional unit of the kidney." },
-        { q: "Which of these is a producer in an ecosystem?", options: ["Lion", "Grass", "Fungi", "Eagle"], ans: 1, explanation: "Producers make their own food by photosynthesis." },
-        { q: "The human heart has how many chambers?", options: ["2", "3", "4", "5"], ans: 2, explanation: "The human heart has four chambers." },
-        { q: "Enzymes are generally made of:", options: ["carbohydrates", "lipids", "proteins", "nucleic acids"], ans: 2, explanation: "Most enzymes are proteins." },
-        { q: "The process of cell division that produces gametes is:", options: ["Mitosis", "Meiosis", "Binary fission", "Budding"], ans: 1, explanation: "Meiosis reduces chromosome number by half." },
-        { q: "Which gas is released during photosynthesis?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Water vapour"], ans: 1, explanation: "Oxygen is a by-product of photosynthesis." }
-      ]
-    };
-
-    const subjectNames = Object.keys(subjectBanks);
-
-    // =========================
-    // Global state
-    // =========================
-    let selectedSubjects = [];
-    let questions = [];
-    let userAnswers = [];
-    let currentQ = 0;
-    let timerInterval = null;
-    let timeLeft = 0;
-    let examSubmitted = false;
-    let userDetails = {};
-
-    // =========================
-    // Subject selector
-    // =========================
-    function renderSubjects() {
-      const holder = document.getElementById("subjectSelection");
-      holder.innerHTML = "";
-
-      subjectNames.forEach((subject) => {
-        const card = document.createElement("div");
-        card.className = "subject-card";
-        card.textContent = subject;
-        card.dataset.subject = subject;
-        card.addEventListener("click", () => {
-          card.classList.toggle("selected");
-          syncSelectedSubjects();
-        });
-        holder.appendChild(card);
-      });
-    }
-
-    function syncSelectedSubjects() {
-      selectedSubjects = Array.from(document.querySelectorAll(".subject-card.selected"))
-        .map(el => el.dataset.subject);
-
-      document.getElementById("subjectCountDisplay") &&
-        (document.getElementById("subjectCountDisplay").textContent = `Subjects: ${selectedSubjects.length}`);
-    }
-
-    // =========================
-    // Exam setup
-    // =========================
-    function startExam() {
-      const firstName = document.getElementById("firstName").value.trim();
-      const lastName = document.getElementById("lastName").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const phone = document.getElementById("phone").value.trim();
-      const pin = document.getElementById("pin").value.trim();
-
-      if (!firstName || !lastName || !email || !phone || !pin) {
-        alert("All fields are required.");
-        return;
-      }
-
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        alert("Enter a valid email address.");
-        return;
-      }
-
-      const normalizedPhone = phone.replace(/[\s\-\(\)]/g, "");
-      if (!/^\d{10,15}$/.test(normalizedPhone)) {
-        alert("Enter a valid phone number.");
-        return;
-      }
-
-      if (pin !== "1234") {
-        alert("Incorrect PIN.");
-        return;
-      }
-
-      if (selectedSubjects.length < 3) {
-        alert("Select at least 3 subjects.");
-        return;
-      }
-
-      userDetails = { firstName, lastName, email, phone };
-
-      // Build 20 questions per selected subject
-      const built = [];
-      selectedSubjects.forEach((subject) => {
-        const bank = subjectBanks[subject] || [];
-        const picked = shuffleArray(bank).slice(0, 20).map((item) => ({
-          ...item,
-          subject
-        }));
-        built.push(...picked);
-      });
-
-      questions = shuffleArray(built);
-      userAnswers = new Array(questions.length).fill(null);
-      currentQ = 0;
-      examSubmitted = false;
-
-      // Time: 20 minutes per selected subject
-      timeLeft = selectedSubjects.length * 20 * 60;
-
-      document.getElementById("loginScreen").classList.add("hidden");
-      document.getElementById("resultScreen").classList.add("hidden");
-      document.getElementById("quizScreen").classList.remove("hidden");
-
-      updateTimerDisplay();
-      showQuestion();
-      renderPalette();
-
-      clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        if (examSubmitted) return;
-        timeLeft--;
-        updateTimerDisplay();
-        if (timeLeft <= 300) {
-          document.getElementById("timerDisplay").classList.add("warning");
+        // ============================================================
+        // 5. UTILITY FUNCTIONS
+        // ============================================================
+        function shuffleArray(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
         }
-        if (timeLeft <= 0) {
-          submitExam();
+
+        function showScreen(name) {
+            Object.keys(screens).forEach(k => {
+                screens[k].classList.toggle('active', k === name);
+            });
         }
-      }, 1000);
-    }
 
-    function updateTimerDisplay() {
-      const totalSeconds = Math.max(0, timeLeft);
-      const mins = Math.floor(totalSeconds / 60);
-      const secs = totalSeconds % 60;
-      document.getElementById("timerDisplay").textContent =
-        `Time: ${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-    }
-
-    // =========================
-    // Quiz rendering
-    // =========================
-    function showQuestion() {
-      const q = questions[currentQ];
-      if (!q) return;
-
-      document.getElementById("progressText").textContent = `Question ${currentQ + 1} of ${questions.length}`;
-      document.getElementById("answeredText").textContent = `Answered: ${userAnswers.filter(v => v !== null).length}`;
-      document.getElementById("subjectLabel").textContent = q.subject;
-      document.getElementById("questionText").textContent = q.q;
-
-      const optionsContainer = document.getElementById("optionsContainer");
-      optionsContainer.innerHTML = "";
-
-      q.options.forEach((opt, index) => {
-        const btn = document.createElement("div");
-        btn.className = "option-btn" + (userAnswers[currentQ] === index ? " selected" : "");
-        btn.textContent = `${optionLetter(index)}. ${opt}`;
-        btn.addEventListener("click", () => {
-          if (examSubmitted) return;
-          userAnswers[currentQ] = index;
-          showQuestion();
-          renderPalette();
-        });
-        optionsContainer.appendChild(btn);
-      });
-
-      document.getElementById("prevBtn").disabled = currentQ === 0;
-      document.getElementById("nextBtn").disabled = currentQ === questions.length - 1;
-      renderPalette();
-    }
-
-    function renderPalette() {
-      const palette = document.getElementById("paletteContainer");
-      palette.innerHTML = "";
-
-      questions.forEach((_, idx) => {
-        const btn = document.createElement("button");
-        btn.className = "palette-btn";
-        btn.textContent = idx + 1;
-        if (idx === currentQ) btn.classList.add("current");
-        if (userAnswers[idx] !== null) btn.classList.add("answered");
-        btn.addEventListener("click", () => {
-          currentQ = idx;
-          showQuestion();
-        });
-        palette.appendChild(btn);
-      });
-    }
-
-    function nextQuestion() {
-      if (currentQ < questions.length - 1) {
-        currentQ++;
-        showQuestion();
-      }
-    }
-
-    function prevQuestion() {
-      if (currentQ > 0) {
-        currentQ--;
-        showQuestion();
-      }
-    }
-
-    // =========================
-    // Result rendering
-    // =========================
-    function buildWrongReview() {
-      const reviewContainer = document.getElementById("reviewContainer");
-      reviewContainer.innerHTML = "";
-
-      const wrongItems = [];
-
-      questions.forEach((q, i) => {
-        const userAns = userAnswers[i];
-        const correct = userAns === q.ans;
-        if (!correct) {
-          wrongItems.push({ q, i, userAns, correct });
+        function showToast(msg, type = 'info', duration = 4000) {
+            toast.textContent = msg;
+            toast.className = 'toast ' + type + ' show';
+            clearTimeout(toast._hide);
+            toast._hide = setTimeout(() => { toast.classList.remove('show'); }, duration);
         }
-      });
 
-      if (wrongItems.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "review-card correct";
-        empty.innerHTML = `
-          <div class="review-badge badge-correct">Perfect</div>
-          <div class="review-q">No wrong answers.</div>
-          <div class="small-muted">All answered questions were correct.</div>
-        `;
-        reviewContainer.appendChild(empty);
-        return;
-      }
+        function formatTime(sec) {
+            const m = String(Math.floor(sec / 60)).padStart(2, '0');
+            const s = String(sec % 60).padStart(2, '0');
+            return `${m}:${s}`;
+        }
 
-      wrongItems.forEach((item) => {
-        const { q, i, userAns } = item;
-        const card = document.createElement("div");
-        card.className = "review-card wrong";
+        function getSubjectLabel(q) {
+            for (const [subject, questions] of Object.entries(QUESTION_BANK)) {
+                if (questions.some(qq => qq.id === q.id)) return subject;
+            }
+            return 'General Paper';
+        }
 
-        card.innerHTML = `
-          <div class="review-badge badge-wrong">Wrong</div>
-          <div class="review-q">Q${i + 1}. ${escapeHtml(q.q)}</div>
-          <div class="review-line"><strong>Your answer:</strong> ${
-            userAns === null ? "Not answered" : `${optionLetter(userAns)}. ${escapeHtml(q.options[userAns])}`
-          }</div>
-          <div class="review-line"><strong>Correct answer:</strong> ${optionLetter(q.ans)}. ${escapeHtml(q.options[q.ans])}</div>
-          <div class="review-line"><strong>Correction:</strong> ${escapeHtml(q.explanation || "No explanation provided.")}</div>
-          <div class="review-line small-muted"><strong>Subject:</strong> ${escapeHtml(q.subject)}</div>
-        `;
-        reviewContainer.appendChild(card);
-      });
-    }
+        // ============================================================
+        // 6. LOGIN
+        // ============================================================
+        $('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fields = {
+                firstName: $('firstName'),
+                lastName: $('lastName'),
+                email: $('email'),
+                phone: $('phone'),
+                jambReg: $('jambReg'),
+                course: $('course'),
+                examPin: $('examPin'),
+            };
+            let valid = true;
+            Object.keys(fields).forEach(key => {
+                const fg = $('fg-' + key);
+                const val = fields[key].value.trim();
+                if (!val) {
+                    fg.classList.add('error');
+                    valid = false;
+                } else {
+                    fg.classList.remove('error');
+                }
+            });
+            // Email validation
+            const emailVal = fields.email.value.trim();
+            if (emailVal && !/^\S+@\S+\.\S+$/.test(emailVal)) {
+                $('fg-email').classList.add('error');
+                $('fg-email').querySelector('.error-msg').textContent = 'Enter a valid email address';
+                valid = false;
+            } else {
+                $('fg-email').classList.remove('error');
+            }
+            // PIN validation
+            if (fields.examPin.value.trim() !== 'UNILAG2026') {
+                $('fg-pin').classList.add('error');
+                $('fg-pin').querySelector('.error-msg').textContent = 'Invalid PIN. Demo: UNILAG2026';
+                valid = false;
+            } else {
+                $('fg-pin').classList.remove('error');
+            }
 
-    function submitExam() {
-      if (examSubmitted) return;
-      examSubmitted = true;
-      clearInterval(timerInterval);
+            if (!valid) {
+                showToast('Please fill all fields correctly.', 'error');
+                return;
+            }
 
-      const total = questions.length;
-      let correctCount = 0;
-
-      questions.forEach((q, i) => {
-        if (userAnswers[i] === q.ans) correctCount++;
-      });
-
-      const wrongCount = total - correctCount;
-      const percentage = total ? Math.round((correctCount / total) * 100) : 0;
-
-      document.getElementById("quizScreen").classList.add("hidden");
-      document.getElementById("resultScreen").classList.remove("hidden");
-
-      document.getElementById("scorePercentDisplay").textContent = `${percentage}%`;
-      document.getElementById("scoreMeta").textContent = `${correctCount} correct out of ${total} • ${wrongCount} wrong`;
-
-      buildWrongReview();
-
-      sendResultEmail({
-        correctCount,
-        wrongCount,
-        total,
-        percentage
-      });
-    }
-
-    function sendResultEmail({ correctCount, wrongCount, total, percentage }) {
-      const wrongSummary = questions
-        .map((q, i) => {
-          const userAns = userAnswers[i];
-          if (userAns === q.ans) return null;
-          return [
-            `Q${i + 1} (${q.subject})`,
-            `Question: ${q.q}`,
-            `Your answer: ${userAns === null ? "Not answered" : `${optionLetter(userAns)}. ${q.options[userAns]}`}`,
-            `Correct answer: ${optionLetter(q.ans)}. ${q.options[q.ans]}`,
-            `Correction: ${q.explanation || "No explanation."}`
-          ].join("\n");
-        })
-        .filter(Boolean)
-        .join("\n\n");
-
-      const params = {
-        to_email: "oimi6702@gmail.com",
-        name: userDetails.firstName,
-        last_name: userDetails.lastName,
-        phone_number: userDetails.phone,
-        email: userDetails.email,
-        score: `${percentage}%`,
-        score_large: `${percentage}%`,
-        correct_count: correctCount,
-        wrong_count: wrongCount,
-        total_questions: total,
-        subjects: selectedSubjects.join(", "),
-        message:
-`Name: ${userDetails.firstName}
-Last name: ${userDetails.lastName}
-Phone number: ${userDetails.phone}
-Email: ${userDetails.email}
-Score: ${percentage}%
-Correct: ${correctCount}
-Wrong: ${wrongCount}
-Total questions: ${total}
-Subjects: ${selectedSubjects.join(", ")}
-
-Wrong answers:
-${wrongSummary || "None"}`
-      };
-
-      emailjs.send("service_mefiz1p", "template_wuvc455", params)
-        .then(() => {
-          console.log("Result email sent.");
-        })
-        .catch((error) => {
-          console.error("EmailJS error:", error);
+            state.user = {
+                firstName: fields.firstName.value.trim(),
+                lastName: fields.lastName.value.trim(),
+                email: fields.email.value.trim(),
+                phone: fields.phone.value.trim(),
+                jambReg: fields.jambReg.value.trim(),
+                course: fields.course.value.trim(),
+            };
+            showScreen('subjects');
+            renderSubjects();
         });
-    }
 
-    // =========================
-    // Init
-    // =========================
-    renderSubjects();
-  </script>
+        // ============================================================
+        // 7. SUBJECT SELECTION
+        // ============================================================
+        function renderSubjects() {
+            const grid = $('subjectGrid');
+            grid.innerHTML = '';
+            SUBJECTS.forEach(sub => {
+                const card = document.createElement('div');
+                card.className = 'subject-card';
+                card.dataset.subject = sub;
+                card.innerHTML = `${sub} <span class="badge">20 questions</span>`;
+                card.addEventListener('click', () => toggleSubject(sub));
+                if (state.selectedSubjects.includes(sub)) card.classList.add('selected');
+                grid.appendChild(card);
+            });
+            updateSubjectCount();
+        }
+
+        function toggleSubject(sub) {
+            const idx = state.selectedSubjects.indexOf(sub);
+            if (idx > -1) {
+                state.selectedSubjects.splice(idx, 1);
+            } else {
+                state.selectedSubjects.push(sub);
+            }
+            renderSubjects();
+        }
+
+        function updateSubjectCount() {
+            const count = state.selectedSubjects.length;
+            $('subjectCount').innerHTML = `Selected: <strong>${count}</strong> subjects (minimum 3)`;
+            $('btnStartExam').disabled = count < 3;
+        }
+
+        $('btnStartExam').addEventListener('click', function() {
+            if (state.selectedSubjects.length < 3) {
+                showToast('Please select at least 3 subjects.', 'error');
+                return;
+            }
+            showScreen('instructions');
+            populateInstructions();
+        });
+
+        $('btnBackToLogin').addEventListener('click', () => {
+            state.selectedSubjects = [];
+            renderSubjects();
+            showScreen('login');
+        });
+
+        // ============================================================
+        // 8. INSTRUCTIONS
+        // ============================================================
+        function populateInstructions() {
+            const count = state.selectedSubjects.length;
+            const totalQ = count * QUESTIONS_PER_SUBJECT;
+            const time = Math.max(20, count * 20); // 20 min per subject
+            state.totalTime = time;
+            $('inst-subject-count').textContent = count;
+            $('inst-total-q').textContent = totalQ;
+            $('inst-total-time').textContent = time;
+
+            const u = state.user;
+            $('candidateSummary').innerHTML = `
+                <div><strong>Name:</strong> ${u.firstName} ${u.lastName}</div>
+                <div><strong>JAMB Reg:</strong> ${u.jambReg}</div>
+                <div><strong>Email:</strong> ${u.email}</div>
+                <div><strong>Course:</strong> ${u.course}</div>
+                <div><strong>Subjects:</strong> ${state.selectedSubjects.join(', ')}</div>
+                <div><strong>Total Questions:</strong> ${totalQ}</div>
+                <div><strong>Time:</strong> ${time} minutes</div>
+            `;
+        }
+
+        $('btnBackToSubjects').addEventListener('click', () => {
+            showScreen('subjects');
+        });
+
+        $('btnBeginExam').addEventListener('click', function() {
+            startExam();
+        });
+
+        // ============================================================
+        // 9. EXAM ENGINE
+        // ============================================================
+        function startExam() {
+            // Build question pool from selected subjects
+            let pool = [];
+            state.selectedSubjects.forEach(sub => {
+                const qs = QUESTION_BANK[sub] || [];
+                // Shuffle questions within subject
+                const shuffled = shuffleArray(qs);
+                // Take exactly 20 (or all if less, but we have 20)
+                pool.push(...shuffled.slice(0, QUESTIONS_PER_SUBJECT));
+            });
+            // Shuffle all questions (mix subjects)
+            state.questions = shuffleArray(pool);
+            state.currentIndex = 0;
+            state.answers = {};
+            state.submitted = false;
+            state.results = null;
+
+            const total = state.questions.length;
+            $('total-q-num').textContent = total;
+            state.timerSeconds = state.totalTime * 60;
+
+            showScreen('exam');
+            renderQuestion();
+            renderPalette();
+            startTimer();
+
+            // Disable subject selection navigation
+            $('btnPrev').disabled = true;
+            $('btnNext').disabled = false;
+        }
+
+        function renderQuestion() {
+            const qs = state.questions;
+            const idx = state.currentIndex;
+            if (!qs.length || idx >= qs.length) return;
+            const q = qs[idx];
+            const subject = getSubjectLabel(q);
+
+            $('current-q-num').textContent = idx + 1;
+            $('exam-subject-label').textContent = `Subject: ${subject}`;
+
+            const container = $('questionContainer');
+            const selected = state.answers[q.id] !== undefined ? state.answers[q.id] : -1;
+
+            let html = `<div class="question-subject">${subject}</div>`;
+            html += `<div class="question-text">${q.q}</div>`;
+            html += `<div class="options">`;
+            q.options.forEach((opt, i) => {
+                const checked = selected === i ? 'checked' : '';
+                html += `
+                    <div class="option ${selected === i ? 'selected' : ''}" data-opt-index="${i}">
+                        <input type="radio" name="q_${q.id}" value="${i}" ${checked} />
+                        <span class="label">${String.fromCharCode(65 + i)}. ${opt}</span>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            container.innerHTML = html;
+
+            // Event listeners for options
+            container.querySelectorAll('.option').forEach(el => {
+                const radio = el.querySelector('input[type="radio"]');
+                radio.addEventListener('change', function() {
+                    const val = parseInt(this.value);
+                    state.answers[q.id] = val;
+                    // Update visual
+                    container.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+                    el.classList.add('selected');
+                    renderPalette();
+                    // Auto-save (just state update)
+                });
+                // Also allow click on the whole option
+                el.addEventListener('click', function(e) {
+                    if (e.target.tagName !== 'INPUT') {
+                        const radio = this.querySelector('input[type="radio"]');
+                        radio.checked = true;
+                        radio.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+
+            // Update nav buttons
+            $('btnPrev').disabled = idx === 0;
+            $('btnNext').disabled = idx === qs.length - 1;
+            renderPalette();
+        }
+
+        function renderPalette() {
+            const qs = state.questions;
+            const palette = $('questionPalette');
+            palette.innerHTML = '';
+            qs.forEach((q, i) => {
+                const pill = document.createElement('div');
+                pill.className = 'pill';
+                if (i === state.currentIndex) pill.classList.add('active');
+                if (state.answers[q.id] !== undefined) pill.classList.add('answered');
+                pill.textContent = i + 1;
+                pill.addEventListener('click', () => {
+                    state.currentIndex = i;
+                    renderQuestion();
+                    renderPalette();
+                });
+                palette.appendChild(pill);
+            });
+        }
+
+        // ============================================================
+        // 10. TIMER
+        // ============================================================
+        function startTimer() {
+            if (state.timerInterval) clearInterval(state.timerInterval);
+            updateTimerDisplay();
+            state.timerInterval = setInterval(() => {
+                state.timerSeconds--;
+                updateTimerDisplay();
+                if (state.timerSeconds <= 0) {
+                    clearInterval(state.timerInterval);
+                    submitExam(true);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const el = $('examTimer');
+            el.textContent = formatTime(state.timerSeconds);
+            if (state.timerSeconds < 120) {
+                el.classList.add('warning');
+            } else {
+                el.classList.remove('warning');
+            }
+        }
+
+        // ============================================================
+        // 11. NAVIGATION
+        // ============================================================
+        $('btnPrev').addEventListener('click', () => {
+            if (state.currentIndex > 0) {
+                state.currentIndex--;
+                renderQuestion();
+                renderPalette();
+            }
+        });
+
+        $('btnNext').addEventListener('click', () => {
+            if (state.currentIndex < state.questions.length - 1) {
+                state.currentIndex++;
+                renderQuestion();
+                renderPalette();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (!screens.exam.classList.contains('active')) return;
+            if (e.key === 'ArrowLeft') $('btnPrev').click();
+            if (e.key === 'ArrowRight') $('btnNext').click();
+        });
+
+        // ============================================================
+        // 12. SUBMIT
+        // ============================================================
+        $('btnSubmitExam').addEventListener('click', () => {
+            if (confirm('Are you sure you want to submit your exam?')) {
+                submitExam(false);
+            }
+        });
+
+        function submitExam(timeUp = false) {
+            if (state.submitted) return;
+            state.submitted = true;
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null;
+            }
+
+            const qs = state.questions;
+            let correct = 0;
+            let wrong = 0;
+            const review = [];
+
+            qs.forEach((q, i) => {
+                const userAns = state.answers[q.id];
+                const isCorrect = userAns === q.answer;
+                if (isCorrect) correct++;
+                else wrong++;
+                review.push({
+                    index: i,
+                    question: q,
+                    userAnswer: userAns !== undefined ? q.options[userAns] : 'Not answered',
+                    correctAnswer: q.options[q.answer],
+                    isCorrect: isCorrect,
+                    explanation: q.explanation || 'No explanation provided.',
+                    subject: getSubjectLabel(q),
+                });
+            });
+
+            const total = qs.length;
+            const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+            state.results = {
+                correct,
+                wrong,
+                total,
+                percentage,
+                review,
+                timeUp,
+            };
+
+            showResults();
+            sendEmail();
+        }
+
+        // ============================================================
+        // 13. RESULTS
+        // ============================================================
+        function showResults() {
+            showScreen('results');
+            const r = state.results;
+            const u = state.user;
+            $('result-candidate-name').textContent = `${u.firstName} ${u.lastName} · ${u.course}`;
+
+            $('resultSummary').innerHTML = `
+                <div class="result-card ${r.percentage >= 50 ? 'pass' : 'fail'}">
+                    <div class="number">${r.percentage}%</div>
+                    <div class="label">Score</div>
+                </div>
+                <div class="result-card pass">
+                    <div class="number">${r.correct}</div>
+                    <div class="label">Correct</div>
+                </div>
+                <div class="result-card fail">
+                    <div class="number">${r.wrong}</div>
+                    <div class="label">Wrong</div>
+                </div>
+                <div class="result-card">
+                    <div class="number">${r.total}</div>
+                    <div class="label">Total Questions</div>
+                </div>
+            `;
+
+            $('reviewContainer').style.display = 'none';
+            $('reviewList').innerHTML = '';
+
+            // Email status
+            $('emailStatus').textContent = '📧 Sending results to teacher...';
+        }
+
+        $('btnToggleReview').addEventListener('click', function() {
+            const container = $('reviewContainer');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                renderReview();
+                this.textContent = '📘 Hide Review';
+            } else {
+                container.style.display = 'none';
+                this.textContent = '📋 Review Wrong Answers';
+            }
+        });
+
+        function renderReview() {
+            const list = $('reviewList');
+            const r = state.results;
+            const wrongItems = r.review.filter(item => !item.isCorrect);
+            if (!wrongItems.length) {
+                list.innerHTML = '<p style="color:#2e7d32;font-weight:600;">🎉 Perfect! No wrong answers.</p>';
+                return;
+            }
+            let html = '';
+            wrongItems.forEach((item, i) => {
+                html += `
+                    <div class="review-item">
+                        <div class="r-q">Q${item.index+1} [${item.subject}]</div>
+                        <div style="font-weight:500;margin-bottom:2px;">${item.question.q}</div>
+                        <div class="r-answer"><strong>Your answer:</strong> ${item.userAnswer}</div>
+                        <div class="r-answer"><strong>Correct answer:</strong> ${item.correctAnswer}</div>
+                        <div class="r-explanation"><strong>💡 Explanation:</strong> ${item.explanation}</div>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        $('btnPrintResults').addEventListener('click', () => {
+            window.print();
+        });
+
+        $('btnRestart').addEventListener('click', () => {
+            if (confirm('Restart the exam? All progress will be lost.')) {
+                state.selectedSubjects = [];
+                state.questions = [];
+                state.answers = {};
+                state.results = null;
+                state.submitted = false;
+                if (state.timerInterval) {
+                    clearInterval(state.timerInterval);
+                    state.timerInterval = null;
+                }
+                showScreen('login');
+                // Reset login form
+                $('loginForm').reset();
+            }
+        });
+
+        // ============================================================
+        // 14. EMAIL SYSTEM (EmailJS)
+        // ============================================================
+        function sendEmail() {
+            const u = state.user;
+            const r = state.results;
+            const wrongReview = r.review.filter(item => !item.isCorrect).map(item =>
+                `Q${item.index+1} [${item.subject}]: ${item.question.q}\nYour: ${item.userAnswer} | Correct: ${item.correctAnswer}\nExplanation: ${item.explanation}`
+            ).join('\n\n');
+
+            const params = {
+                first_name: u.firstName,
+                last_name: u.lastName,
+                email: u.email,
+                phone: u.phone,
+                jamb_reg: u.jambReg,
+                course: u.course,
+                subjects: state.selectedSubjects.join(', '),
+                score: `${r.correct}/${r.total}`,
+                percentage: `${r.percentage}%`,
+                correct: r.correct,
+                wrong: r.wrong,
+                total: r.total,
+                wrong_review: wrongReview || 'No wrong answers!',
+                time_up: r.timeUp ? 'Yes (Time expired)' : 'No',
+            };
+
+            emailjs.send('service_ezqn58p', 'template_8maj0c4', params)
+                .then(() => {
+                    $('emailStatus').textContent = '✅ Results sent successfully to the teacher.';
+                    showToast('✅ Results sent to teacher!', 'success');
+                })
+                .catch((err) => {
+                    console.error('EmailJS error:', err);
+                    $('emailStatus').textContent = '⚠️ Failed to send email. Please contact the admin.';
+                    showToast('⚠️ Email sending failed. Check console.', 'error');
+                });
+        }
+
+        // ============================================================
+        // 15. KEYBOARD SHORTCUTS & INIT
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            // Submit with Ctrl+Enter or Cmd+Enter
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (screens.exam.classList.contains('active')) {
+                    $('btnSubmitExam').click();
+                }
+            }
+        });
+
+        // Initial render
+        renderSubjects();
+
+        // Auto-login with demo data (for faster testing) - optional, remove for production
+        // Uncomment below to pre-fill demo data
+        /*
+        document.addEventListener('DOMContentLoaded', function() {
+          $('firstName').value = 'Chidi';
+          $('lastName').value = 'Okonkwo';
+          $('email').value = 'chidi@example.com';
+          $('phone').value = '08012345678';
+          $('jambReg').value = '202612345678';
+          $('course').value = 'Computer Science';
+          $('examPin').value = 'UNILAG2026';
+        });
+        */
+
+        console.log('✅ UNILAG Post-UTME CBT Simulator V2 loaded.');
+        console.log(`📚 ${Object.values(QUESTION_BANK).flat().length} total questions loaded.`);
+        console.log('🎯 Select 3+ subjects to begin.');
+    </script>
+
 </body>
 </html>
