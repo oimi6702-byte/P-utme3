@@ -664,6 +664,1351 @@
                         🔑 Default PIN: <strong style="color:var(--text);">1234</strong>
                     </div>
                 </div>
+                <!-- FIX: added type="button" to prevent form submission -->
+                <button id="enterQuizBtn" type="button" class="btn btn-primary" style="margin-top:12px;min-width:200px;">
+                    🚀 Enter Secure Quiz
+                </button>
+                <p style="font-size:0.7rem;color:var(--muted);margin-top:10px;">
+                    By continuing you agree to the examination rules.
+                </p>
+            </div>
+        </div>
+
+        <!-- ─── QUIZ SCREEN ─── -->
+        <div id="quizScreen" class="screen">
+            <div class="quiz-header">
+                <div class="q-counter">
+                    Question <span id="qNum">1</span>/<span id="qTotal">20</span>
+                </div>
+                <div class="timer" id="timerDisplay">
+                    ⏱️ <span id="timerText">30:00</span>
+                </div>
+            </div>
+            <div class="progress-wrap">
+                <div class="bar" id="progressBar"></div>
+            </div>
+
+            <div id="questionText">Loading question…</div>
+
+            <div class="options-grid" id="optionsContainer">
+                <!-- injected by JS -->
+            </div>
+
+            <div class="quiz-nav">
+                <div class="left">
+                    <button id="prevBtn" class="btn btn-outline btn-sm">◀ Prev</button>
+                    <button id="clearBtn" class="btn btn-outline btn-sm" style="border-color:rgba(239,68,68,0.3);color:var(--danger);">✕ Clear</button>
+                </div>
+                <div class="right">
+                    <button id="nextBtn" class="btn btn-primary btn-sm">Next ▶</button>
+                    <button id="submitQuizBtn" class="btn btn-success btn-sm">📤 Submit</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── RESULTS SCREEN ─── -->
+        <div id="resultsScreen" class="screen">
+            <div class="result-card">
+                <div class="big-score" id="finalScore">0/20</div>
+                <div class="score-label">Your Score</div>
+                <div class="performance" id="performanceMsg">
+                    <span class="pass">✅ Excellent Performance!</span>
+                </div>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat">
+                    <div class="num" id="correctCount">0</div>
+                    <div class="label">✅ Correct</div>
+                </div>
+                <div class="stat">
+                    <div class="num" id="wrongCount">0</div>
+                    <div class="label">❌ Wrong</div>
+                </div>
+                <div class="stat">
+                    <div class="num" id="percentScore">0%</div>
+                    <div class="label">📊 Percentage</div>
+                </div>
+                <div class="stat">
+                    <div class="num" id="timeTaken">00:00</div>
+                    <div class="label">⏱️ Time Taken</div>
+                </div>
+            </div>
+
+            <div class="result-actions">
+                <button id="sendResultsBtn" class="btn btn-success">
+                    📧 Send Results to Email
+                </button>
+                <button id="copyResultsBtn" class="btn btn-outline">
+                    📋 Copy Results
+                </button>
+                <button id="retryBtn" class="btn btn-outline">
+                    🔄 Retry Exam
+                </button>
+            </div>
+            <p style="font-size:0.75rem;color:var(--muted);text-align:center;margin-top:12px;">
+                Results will be sent to <strong style="color:var(--text);">oimi6702@gmail.com</strong>
+            </p>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- JAVASCRIPT – with fixed button handler                          -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ─── CONFIG ───
+            const CONFIG = {
+                RECIPIENT_EMAIL: 'oimi6702@gmail.com',
+                EXAM_PIN: '1234',
+                TOTAL_QUESTIONS: 20,
+                TIME_LIMIT_SECONDS: 30 * 60, // 30 minutes
+                // EmailJS – optional; set your keys to enable
+                EMAILJS_PUBLIC_KEY: 'YOUR_PUBLIC_KEY',
+                EMAILJS_SERVICE_ID: 'service_your_service_id',
+                EMAILJS_TEMPLATE_ID: 'template_your_template_id',
+            };
+
+            // ─── QUESTIONS ───
+            const QUESTIONS = [
+                { id: 1, question: 'What is the SI unit of electric current?', options: ['Ampere', 'Volt', 'Ohm',
+                        'Watt'], answer: 0 },
+                { id: 2, question: 'Which of the following is a noble gas?', options: ['Oxygen', 'Nitrogen', 'Argon',
+                        'Chlorine'
+                    ], answer: 2 },
+                { id: 3, question: 'What is the chemical symbol for Gold?', options: ['Ag', 'Fe', 'Au', 'Cu'],
+                    answer: 2 },
+                { id: 4, question: 'Which planet is known as the Red Planet?', options: ['Venus', 'Jupiter', 'Mars',
+                        'Saturn'
+                    ], answer: 2 },
+                { id: 5, question: 'What is the largest ocean on Earth?', options: ['Atlantic', 'Indian', 'Arctic',
+                        'Pacific'
+                    ], answer: 3 },
+                { id: 6, question: 'Who developed the theory of relativity?', options: ['Newton', 'Einstein',
+                        'Hawking', 'Galileo'
+                    ], answer: 1 },
+                { id: 7, question: 'What is the square root of 144?', options: ['10', '11', '12', '13'], answer: 2 },
+                { id: 8, question: 'Which gas do plants absorb from the atmosphere?', options: ['Oxygen', 'Nitrogen',
+                        'Carbon Dioxide', 'Hydrogen'
+                    ], answer: 2 },
+                { id: 9, question: 'What is the speed of light approximately?', options: ['3×10⁶ m/s', '3×10⁸ m/s',
+                        '3×10¹⁰ m/s', '3×10⁴ m/s'
+                    ], answer: 1 },
+                { id: 10, question: 'Which of these is a programming language?', options: ['HTML', 'CSS',
+                        'JavaScript', 'All of the above'
+                    ], answer: 3 },
+                { id: 11, question: 'What is the freezing point of water in Celsius?', options: ['0°C', '32°C',
+                        '100°C', '-1°C'
+                    ], answer: 0 },
+                { id: 12, question: 'Which country has the largest population?', options: ['India', 'USA',
+                        'Indonesia', 'China'
+                    ], answer: 0 },
+                { id: 13, question: 'What is the powerhouse of the cell?', options: ['Nucleus', 'Ribosome',
+                        'Mitochondria', 'Golgi'
+                    ], answer: 2 },
+                { id: 14, question: 'Which is the smallest prime number?', options: ['0', '1', '2', '3'], answer: 2 },
+                { id: 15, question: 'What is the currency of Nigeria?', options: ['Cedi', 'Naira', 'Rand',
+                        'Shilling'], answer: 1 },
+                { id: 16, question: 'Which blood type is the universal donor?', options: ['A', 'B', 'AB', 'O'],
+                    answer: 3 },
+                { id: 17, question: 'What is the atomic number of Carbon?', options: ['4', '6', '8', '12'],
+                    answer: 1 },
+                { id: 18, question: 'Which of these is NOT a mammal?', options: ['Dolphin', 'Whale', 'Shark',
+                        'Elephant'
+                    ], answer: 2 },
+                { id: 19, question: 'What is 7 × 8 + 4?', options: ['52', '56', '60', '64'], answer: 2 },
+                { id: 20, question: 'Which continent is the largest by land area?', options: ['Africa', 'Asia',
+                        'North America', 'Europe'
+                    ], answer: 1 },
+            ];
+
+            // ─── STATE ───
+            const state = {
+                currentIndex: 0,
+                answers: new Array(CONFIG.TOTAL_QUESTIONS).fill(null),
+                quizStarted: false,
+                quizEnded: false,
+                timerInterval: null,
+                timeRemaining: CONFIG.TIME_LIMIT_SECONDS,
+                startTimestamp: null,
+                endTimestamp: null,
+                isSubmitting: false,
+                resultsSent: false,
+                _results: null,
+            };
+
+            // ─── DOM REFS ───
+            let dom = {};
+
+            function cacheDom() {
+                dom = {
+                    lockScreen: document.getElementById('lockScreen'),
+                    quizScreen: document.getElementById('quizScreen'),
+                    resultsScreen: document.getElementById('resultsScreen'),
+                    enterBtn: document.getElementById('enterQuizBtn'),
+                    examPin: document.getElementById('examPin'),
+                    qNum: document.getElementById('qNum'),
+                    qTotal: document.getElementById('qTotal'),
+                    questionText: document.getElementById('questionText'),
+                    optionsContainer: document.getElementById('optionsContainer'),
+                    prevBtn: document.getElementById('prevBtn'),
+                    nextBtn: document.getElementById('nextBtn'),
+                    clearBtn: document.getElementById('clearBtn'),
+                    submitBtn: document.getElementById('submitQuizBtn'),
+                    timerText: document.getElementById('timerText'),
+                    timerDisplay: document.getElementById('timerDisplay'),
+                    progressBar: document.getElementById('progressBar'),
+                    finalScore: document.getElementById('finalScore'),
+                    performanceMsg: document.getElementById('performanceMsg'),
+                    correctCount: document.getElementById('correctCount'),
+                    wrongCount: document.getElementById('wrongCount'),
+                    percentScore: document.getElementById('percentScore'),
+                    timeTaken: document.getElementById('timeTaken'),
+                    sendResultsBtn: document.getElementById('sendResultsBtn'),
+                    copyResultsBtn: document.getElementById('copyResultsBtn'),
+                    retryBtn: document.getElementById('retryBtn'),
+                    toast: document.getElementById('toast'),
+                };
+            }
+
+            // ─── TOAST ───
+            let toastTimeout = null;
+
+            function showToast(message, type = 'info') {
+                try {
+                    if (toastTimeout) {
+                        clearTimeout(toastTimeout);
+                        dom.toast.classList.remove('show', 'success', 'error');
+                    }
+                    dom.toast.textContent = message;
+                    dom.toast.className = '';
+                    if (type === 'success') dom.toast.classList.add('success');
+                    if (type === 'error') dom.toast.classList.add('error');
+                    dom.toast.classList.add('show');
+                    toastTimeout = setTimeout(() => {
+                        dom.toast.classList.remove('show');
+                    }, 5000);
+                } catch (e) {
+                    console.warn('Toast error:', e);
+                    alert(message);
+                }
+            }
+
+            // ─── SCREEN MANAGEMENT ───
+            function showScreen(screenId) {
+                try {
+                    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+                    const target = document.getElementById(screenId);
+                    if (target) target.classList.add('active');
+                } catch (e) {
+                    console.error('showScreen error:', e);
+                }
+            }
+
+            // ─── RENDER QUESTION ───
+            function renderQuestion() {
+                try {
+                    const idx = state.currentIndex;
+                    const q = QUESTIONS[idx];
+                    if (!q) return;
+
+                    dom.qNum.textContent = idx + 1;
+                    dom.qTotal.textContent = CONFIG.TOTAL_QUESTIONS;
+                    dom.questionText.textContent = q.question;
+
+                    const letters = ['A', 'B', 'C', 'D'];
+                    dom.optionsContainer.innerHTML = '';
+                    q.options.forEach((opt, optIdx) => {
+                        const btn = document.createElement('button');
+                        btn.className = 'option-btn';
+                        if (state.answers[idx] === optIdx) btn.classList.add('selected');
+                        btn.innerHTML = `<span class="letter">${letters[optIdx]}</span> ${opt}`;
+                        btn.dataset.optIndex = optIdx;
+                        btn.addEventListener('click', () => selectOption(idx, optIdx));
+                        if (state.quizEnded) btn.disabled = true;
+                        dom.optionsContainer.appendChild(btn);
+                    });
+
+                    const answered = state.answers.filter(a => a !== null).length;
+                    dom.progressBar.style.width = `${(answered / CONFIG.TOTAL_QUESTIONS) * 100}%`;
+
+                    dom.prevBtn.disabled = idx === 0;
+                    const isLast = idx === CONFIG.TOTAL_QUESTIONS - 1;
+                    dom.nextBtn.textContent = isLast ? '📌 Finish' : 'Next ▶';
+                } catch (e) {
+                    console.error('renderQuestion error:', e);
+                    showToast('Error loading question. Please refresh.', 'error');
+                }
+            }
+
+            // ─── SELECT OPTION ───
+            function selectOption(qIdx, optIdx) {
+                try {
+                    if (state.quizEnded) return;
+                    state.answers[qIdx] = optIdx;
+                    const allOpts = dom.optionsContainer.querySelectorAll('.option-btn');
+                    allOpts.forEach((btn, i) => {
+                        btn.classList.toggle('selected', i === optIdx);
+                    });
+                    const answered = state.answers.filter(a => a !== null).length;
+                    dom.progressBar.style.width = `${(answered / CONFIG.TOTAL_QUESTIONS) * 100}%`;
+                } catch (e) {
+                    console.error('selectOption error:', e);
+                }
+            }
+
+            // ─── NAVIGATION ───
+            function goToPrev() {
+                try {
+                    if (state.currentIndex > 0) {
+                        state.currentIndex--;
+                        renderQuestion();
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            function goToNext() {
+                try {
+                    if (state.currentIndex < CONFIG.TOTAL_QUESTIONS - 1) {
+                        state.currentIndex++;
+                        renderQuestion();
+                    } else {
+                        handleSubmit();
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            function clearCurrentAnswer() {
+                try {
+                    if (state.quizEnded) return;
+                    const idx = state.currentIndex;
+                    state.answers[idx] = null;
+                    renderQuestion();
+                } catch (e) { console.error(e); }
+            }
+
+            // ─── TIMER ───
+            function startTimer() {
+                try {
+                    if (state.timerInterval) return;
+                    state.startTimestamp = Date.now();
+                    state.timerInterval = setInterval(() => {
+                        state.timeRemaining--;
+                        updateTimerDisplay();
+                        if (state.timeRemaining <= 0) {
+                            clearInterval(state.timerInterval);
+                            state.timerInterval = null;
+                            showToast('⏰ Time is up! Auto-submitting…', 'error');
+                            handleSubmit();
+                        }
+                    }, 1000);
+                } catch (e) { console.error(e); }
+            }
+
+            function updateTimerDisplay() {
+                try {
+                    const mins = Math.floor(state.timeRemaining / 60);
+                    const secs = state.timeRemaining % 60;
+                    dom.timerText.textContent =
+                        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                    dom.timerDisplay.classList.toggle('warning', state.timeRemaining < 60);
+                } catch (e) { console.error(e); }
+            }
+
+            function stopTimer() {
+                if (state.timerInterval) {
+                    clearInterval(state.timerInterval);
+                    state.timerInterval = null;
+                }
+            }
+
+            function getTimeTaken() {
+                if (!state.startTimestamp) return '00:00';
+                const end = state.endTimestamp || Date.now();
+                const diff = Math.floor((end - state.startTimestamp) / 1000);
+                const mins = Math.floor(diff / 60);
+                const secs = diff % 60;
+                return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+
+            // ─── SUBMIT ───
+            function handleSubmit() {
+                try {
+                    if (state.isSubmitting || state.quizEnded) return;
+
+                    const answered = state.answers.filter(a => a !== null).length;
+                    if (answered < CONFIG.TOTAL_QUESTIONS) {
+                        const confirmSubmit = confirm(
+                            `You have answered ${answered}/${CONFIG.TOTAL_QUESTIONS} questions.\n\n` +
+                            `⚠️ Unanswered questions will be marked wrong.\n\n` +
+                            `Do you want to submit anyway?`
+                        );
+                        if (!confirmSubmit) return;
+                    }
+
+                    state.isSubmitting = true;
+                    dom.submitBtn.disabled = true;
+                    dom.submitBtn.innerHTML = '<span class="spinner"></span> Submitting…';
+
+                    stopTimer();
+                    state.quizEnded = true;
+                    state.endTimestamp = Date.now();
+
+                    const results = calculateResults();
+                    showResults(results);
+
+                    state.isSubmitting = false;
+                    dom.submitBtn.disabled = false;
+                    dom.submitBtn.innerHTML = '📤 Submit';
+                } catch (e) {
+                    console.error('handleSubmit error:', e);
+                    showToast('Error submitting exam. Please try again.', 'error');
+                    state.isSubmitting = false;
+                    dom.submitBtn.disabled = false;
+                    dom.submitBtn.innerHTML = '📤 Submit';
+                }
+            }
+
+            function calculateResults() {
+                let correct = 0;
+                let wrong = 0;
+                const details = [];
+
+                QUESTIONS.forEach((q, idx) => {
+                    const userAns = state.answers[idx];
+                    const isCorrect = userAns === q.answer;
+                    if (userAns === null) {
+                        wrong++;
+                        details.push({ ...q, userAns, isCorrect: false, skipped: true });
+                    } else if (isCorrect) {
+                        correct++;
+                        details.push({ ...q, userAns, isCorrect: true, skipped: false });
+                    } else {
+                        wrong++;
+                        details.push({ ...q, userAns, isCorrect: false, skipped: false });
+                    }
+                });
+
+                const total = QUESTIONS.length;
+                const percent = Math.round((correct / total) * 100);
+                const passed = percent >= 50;
+
+                return { correct, wrong, total, percent, passed, details, timeTaken: getTimeTaken() };
+            }
+
+            function showResults(results) {
+                try {
+                    showScreen('resultsScreen');
+                    dom.finalScore.textContent = `${results.correct}/${results.total}`;
+                    dom.correctCount.textContent = results.correct;
+                    dom.wrongCount.textContent = results.wrong;
+                    dom.percentScore.textContent = `${results.percent}%`;
+                    dom.timeTaken.textContent = results.timeTaken;
+
+                    const perfEl = dom.performanceMsg;
+                    if (results.passed) {
+                        perfEl.innerHTML = `<span class="pass">✅ PASSED – Excellent Performance!</span>`;
+                    } else {
+                        perfEl.innerHTML = `<span class="fail">❌ FAILED – Please review and try again.</span>`;
+                    }
+
+                    state._results = results;
+                } catch (e) {
+                    console.error('showResults error:', e);
+                }
+            }
+
+            // ─── SEND RESULTS ───
+            async function sendResults() {
+                try {
+                    if (state.isSubmitting) return;
+                    if (!state._results) {
+                        showToast('No results to send. Please complete the exam first.', 'error');
+                        return;
+                    }
+
+                    const name = prompt('Enter your full name (for the results):', 'Candidate') || 'Candidate';
+                    const r = state._results;
+
+                    // Build summary
+                    let summary = `📊 POST-UTME CBT EXAM RESULTS\n`;
+                    summary += `───────────────────────────\n`;
+                    summary += `👤 Candidate: ${name.trim()}\n`;
+                    summary += `📅 Date: ${new Date().toLocaleString()}\n`;
+                    summary += `───────────────────────────\n`;
+                    summary += `✅ Correct:   ${r.correct}/${r.total}\n`;
+                    summary += `❌ Wrong:     ${r.wrong}/${r.total}\n`;
+                    summary += `📊 Score:     ${r.percent}%\n`;
+                    summary += `⏱️ Time:      ${r.timeTaken}\n`;
+                    summary += `🏆 Status:    ${r.passed ? 'PASSED ✅' : 'FAILED ❌'}\n`;
+                    summary += `───────────────────────────\n`;
+                    summary += `📝 DETAILED BREAKDOWN:\n`;
+                    r.details.forEach((d, i) => {
+                        const status = d.skipped ? '⏭️ SKIPPED' : (d.isCorrect ? '✅' : '❌');
+                        const uL = d.userAns !== null ? ['A', 'B', 'C', 'D'][d.userAns] : '-';
+                        const cL = ['A', 'B', 'C', 'D'][d.answer];
+                        summary += `  Q${i+1}. ${status}  (Your: ${uL} | Correct: ${cL})\n`;
+                    });
+                    summary += `───────────────────────────\n`;
+                    summary += `📧 Sent to: ${CONFIG.RECIPIENT_EMAIL}\n`;
+
+                    // ── Try EmailJS if configured ──
+                    const useEmailJS = CONFIG.EMAILJS_PUBLIC_KEY &&
+                        CONFIG.EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY' &&
+                        CONFIG.EMAILJS_SERVICE_ID !== 'service_your_service_id' &&
+                        CONFIG.EMAILJS_TEMPLATE_ID !== 'template_your_template_id';
+
+                    if (useEmailJS && typeof emailjs !== 'undefined') {
+                        try {
+                            emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+                            const templateParams = {
+                                to_email: CONFIG.RECIPIENT_EMAIL,
+                                from_name: 'CBT Exam System',
+                                candidate_name: name.trim(),
+                                score: `${r.correct}/${r.total}`,
+                                percentage: `${r.percent}%`,
+                                status: r.passed ? 'PASSED' : 'FAILED',
+                                time_taken: r.timeTaken,
+                                details: summary,
+                                subject: `📊 POST-UTME CBT Results – ${name.trim()}`,
+                            };
+                            const response = await emailjs.send(
+                                CONFIG.EMAILJS_SERVICE_ID,
+                                CONFIG.EMAILJS_TEMPLATE_ID,
+                                templateParams
+                            );
+                            if (response.status === 200) {
+                                showToast('✅ Results sent successfully to oimi6702@gmail.com!', 'success');
+                                state.resultsSent = true;
+                                return;
+                            }
+                        } catch (err) {
+                            console.warn('EmailJS failed, falling back to mailto:', err);
+                        }
+                    }
+
+                    // ── Fallback: mailto ──
+                    const subject = encodeURIComponent(`📊 POST-UTME CBT Results – ${name.trim()}`);
+                    const body = encodeURIComponent(summary);
+                    const mailtoLink = `mailto:${CONFIG.RECIPIENT_EMAIL}?subject=${subject}&body=${body}`;
+                    const win = window.open(mailtoLink, '_blank');
+                    if (win) {
+                        showToast('📧 Email client opened. Please send the email.', 'success');
+                        state.resultsSent = true;
+                    } else {
+                        // If popup blocked, copy to clipboard
+                        await navigator.clipboard.writeText(summary);
+                        showToast('📋 Results copied. Please paste and email to oimi6702@gmail.com', 'success');
+                        state.resultsSent = true;
+                    }
+                } catch (e) {
+                    console.error('sendResults error:', e);
+                    showToast('❌ Could not send results. Please copy manually.', 'error');
+                }
+            }
+
+            // ─── COPY RESULTS ───
+            async function copyResults() {
+                try {
+                    if (!state._results) {
+                        showToast('No results to copy.', 'error');
+                        return;
+                    }
+                    const r = state._results;
+                    let text = `📊 POST-UTME CBT RESULTS\n`;
+                    text += `Score: ${r.correct}/${r.total}  (${r.percent}%)\n`;
+                    text += `Correct: ${r.correct}  |  Wrong: ${r.wrong}\n`;
+                    text += `Time: ${r.timeTaken}  |  Status: ${r.passed ? 'PASSED ✅' : 'FAILED ❌'}\n`;
+                    text += `\n-- Sent to oimi6702@gmail.com --`;
+
+                    await navigator.clipboard.writeText(text);
+                    showToast('📋 Results copied to clipboard!', 'success');
+                } catch (_) {
+                    try {
+                        const ta = document.createElement('textarea');
+                        ta.value = text;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        showToast('📋 Results copied!', 'success');
+                    } catch (e) {
+                        showToast('❌ Could not copy results.', 'error');
+                    }
+                }
+            }
+
+            // ─── RETRY ───
+            function resetExam() {
+                try {
+                    stopTimer();
+                    state.currentIndex = 0;
+                    state.answers = new Array(CONFIG.TOTAL_QUESTIONS).fill(null);
+                    state.quizStarted = false;
+                    state.quizEnded = false;
+                    state.timeRemaining = CONFIG.TIME_LIMIT_SECONDS;
+                    state.startTimestamp = null;
+                    state.endTimestamp = null;
+                    state.isSubmitting = false;
+                    state.resultsSent = false;
+                    state._results = null;
+                    updateTimerDisplay();
+                    dom.timerDisplay.classList.remove('warning');
+                    dom.submitBtn.disabled = false;
+                    dom.submitBtn.innerHTML = '📤 Submit';
+                    showScreen('lockScreen');
+                    dom.examPin.value = '';
+                    dom.examPin.focus();
+                    showToast('🔄 Exam reset. Ready to start.', 'success');
+                } catch (e) {
+                    console.error('resetExam error:', e);
+                }
+            }
+
+            // ─── ENTER QUIZ (FIXED) ───
+            function enterQuiz(e) {
+                // Prevent any default action (e.g., form submit, page reload)
+                if (e) e.preventDefault();
+
+                try {
+                    const pin = dom.examPin.value.trim();
+
+                    // Show feedback immediately
+                    dom.enterBtn.disabled = true;
+                    dom.enterBtn.innerHTML = '<span class="spinner"></span> Checking…';
+
+                    if (pin !== CONFIG.EXAM_PIN) {
+                        showToast('❌ Invalid Exam PIN. Please try again.', 'error');
+                        dom.examPin.value = '';
+                        dom.examPin.focus();
+                        dom.enterBtn.disabled = false;
+                        dom.enterBtn.innerHTML = '🚀 Enter Secure Quiz';
+                        return;
+                    }
+
+                    // Valid PIN – reset state and start
+                    state.currentIndex = 0;
+                    state.answers = new Array(CONFIG.TOTAL_QUESTIONS).fill(null);
+                    state.quizStarted = true;
+                    state.quizEnded = false;
+                    state.timeRemaining = CONFIG.TIME_LIMIT_SECONDS;
+                    state.startTimestamp = null;
+                    state.endTimestamp = null;
+                    state.isSubmitting = false;
+                    state.resultsSent = false;
+                    state._results = null;
+                    updateTimerDisplay();
+                    dom.timerDisplay.classList.remove('warning');
+
+                    showScreen('quizScreen');
+                    renderQuestion();
+                    startTimer();
+
+                    showToast('✅ Exam started! Good luck! 🍀', 'success');
+
+                    dom.enterBtn.disabled = false;
+                    dom.enterBtn.innerHTML = '🚀 Enter Secure Quiz';
+
+                } catch (err) {
+                    console.error('enterQuiz error:', err);
+                    showToast('❌ Error starting exam. Please refresh and try again.', 'error');
+                    dom.enterBtn.disabled = false;
+                    dom.enterBtn.innerHTML = '🚀 Enter Secure Quiz';
+                }
+            }
+
+            // ─── INIT ───
+            function init() {
+                try {
+                    cacheDom();
+                    dom.qTotal.textContent = CONFIG.TOTAL_QUESTIONS;
+                    updateTimerDisplay();
+
+                    // ── Event listeners (with preventDefault) ──
+                    dom.enterBtn.addEventListener('click', enterQuiz);
+                    dom.examPin.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            enterQuiz(e);
+                        }
+                    });
+
+                    dom.prevBtn.addEventListener('click', goToPrev);
+                    dom.nextBtn.addEventListener('click', goToNext);
+                    dom.clearBtn.addEventListener('click', clearCurrentAnswer);
+                    dom.submitBtn.addEventListener('click', handleSubmit);
+
+                    dom.sendResultsBtn.addEventListener('click', sendResults);
+                    dom.copyResultsBtn.addEventListener('click', copyResults);
+                    dom.retryBtn.addEventListener('click', resetExam);
+
+                    // Keyboard shortcuts
+                    document.addEventListener('keydown', (e) => {
+                        if (!dom.quizScreen.classList.contains('active')) return;
+                        if (e.key === 'ArrowLeft') goToPrev();
+                        if (e.key === 'ArrowRight') goToNext();
+                        if (e.key === 'c' || e.key === 'C') clearCurrentAnswer();
+                        if (e.key >= '1' && e.key <= '4') {
+                            const idx = parseInt(e.key) - 1;
+                            const opts = dom.optionsContainer.querySelectorAll('.option-btn');
+                            if (opts[idx]) opts[idx].click();
+                        }
+                    });
+
+                    dom.examPin.focus();
+                    console.log('🎓 POST-UTME CBT EXAM loaded successfully.');
+                    console.log(`📧 Results will be sent to: ${CONFIG.RECIPIENT_EMAIL}`);
+                    console.log('🔑 Default PIN: 1234');
+                } catch (e) {
+                    console.error('Init error:', e);
+                    showToast('⚠️ Error loading exam. Please refresh.', 'error');
+                }
+            }
+
+            // ─── RUN ───
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+
+</body>
+</html>            --radius: 16px;
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--ink);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            -webkit-user-select: none;
+            user-select: none;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(245, 158, 11, 0.04) 0%, transparent 60%);
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* SCROLLBAR                                                   */
+        /* ───────────────────────────────────────────────────────────── */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--surface);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* APP CONTAINER                                               */
+        /* ───────────────────────────────────────────────────────────── */
+        #app {
+            width: 100%;
+            max-width: 780px;
+            min-height: 520px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 28px 30px 32px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(2px);
+            transition: all 0.25s ease;
+        }
+        #app::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.03), transparent 60%);
+            pointer-events: none;
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* TYPOGRAPHY                                                  */
+        /* ───────────────────────────────────────────────────────────── */
+        .badge {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent2);
+            padding: 4px 14px;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* SCREENS                                                     */
+        /* ───────────────────────────────────────────────────────────── */
+        .screen {
+            display: none;
+            flex-direction: column;
+            gap: 18px;
+            animation: fadeUp 0.45s ease;
+            position: relative;
+            z-index: 2;
+        }
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* LOCK SCREEN                                                 */
+        /* ───────────────────────────────────────────────────────────── */
+        #lockScreen .lock-icon {
+            font-size: 4rem;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        #lockScreen h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 30%, var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+        #lockScreen .sub {
+            color: var(--subtext);
+            font-size: 0.95rem;
+            margin-top: -4px;
+        }
+        #lockScreen .exam-meta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 8px 0 4px;
+        }
+        #lockScreen .exam-meta span {
+            background: var(--card);
+            padding: 6px 18px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            border: 1px solid var(--border);
+            color: var(--subtext);
+        }
+        #lockScreen .exam-meta strong {
+            color: var(--text);
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* BUTTONS                                                     */
+        /* ───────────────────────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 36px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            border: none;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.45);
+        }
+        .btn-primary:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: #fff;
+            border: none;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+        }
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.45);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--subtext);
+        }
+        .btn-outline:hover:not(:disabled) {
+            background: var(--card);
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), #d97706);
+            color: #fff;
+            border: none;
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+        }
+        .btn-gold:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(245, 158, 11, 0.45);
+        }
+
+        .btn-sm {
+            padding: 8px 18px;
+            font-size: 0.8rem;
+            border-radius: 8px;
+        }
+        .btn-block {
+            width: 100%;
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* QUIZ SCREEN                                                 */
+        /* ───────────────────────────────────────────────────────────── */
+        #quizScreen .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        #quizScreen .quiz-header .q-counter {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        #quizScreen .quiz-header .q-counter span {
+            color: var(--accent2);
+        }
+        #quizScreen .timer {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1.15rem;
+            background: var(--card);
+            padding: 6px 18px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #quizScreen .timer.warning {
+            color: var(--danger);
+            border-color: var(--danger);
+            animation: pulse 1.2s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .progress-wrap {
+            width: 100%;
+            height: 4px;
+            background: var(--card);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 2px 0 4px;
+        }
+        .progress-wrap .bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+
+        #questionText {
+            font-size: 1.2rem;
+            font-weight: 600;
+            line-height: 1.6;
+            margin: 8px 0 4px;
+            min-height: 60px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 8px 0 6px;
+        }
+        @media (max-width: 540px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-btn {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: inherit;
+            width: 100%;
+        }
+        .option-btn .letter {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--subtext);
+            flex-shrink: 0;
+            transition: 0.15s;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.06);
+        }
+        .option-btn.selected {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.12);
+        }
+        .option-btn.selected .letter {
+            background: var(--accent);
+            color: #fff;
+        }
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.8;
+        }
+
+        .quiz-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .quiz-nav .left,
+        .quiz-nav .right {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* RESULTS SCREEN                                              */
+        /* ───────────────────────────────────────────────────────────── */
+        #resultsScreen .result-card {
+            text-align: center;
+            padding: 12px 0 6px;
+        }
+        #resultsScreen .result-card .big-score {
+            font-size: 4.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gold), #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+        #resultsScreen .result-card .score-label {
+            color: var(--subtext);
+            font-size: 1rem;
+        }
+        #resultsScreen .result-card .performance {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        #resultsScreen .result-card .performance .pass {
+            color: var(--success);
+        }
+        #resultsScreen .result-card .performance .fail {
+            color: var(--danger);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 14px;
+            margin: 10px 0 8px;
+        }
+        .stat-grid .stat {
+            background: var(--card);
+            padding: 14px 10px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .stat-grid .stat .num {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .stat-grid .stat .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--subtext);
+            margin-top: 2px;
+        }
+
+        .result-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 6px;
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* TOAST                                                       */
+        /* ───────────────────────────────────────────────────────────── */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 28px;
+            border-radius: 14px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            z-index: 99999;
+            opacity: 0;
+            transition: all 0.4s ease;
+            pointer-events: none;
+            backdrop-filter: blur(8px);
+            max-width: 90%;
+            text-align: center;
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        #toast.success {
+            border-color: var(--success);
+        }
+        #toast.error {
+            border-color: var(--danger);
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* RESPONSIVE                                                  */
+        /* ───────────────────────────────────────────────────────────── */
+        @media (max-width: 600px) {
+            #app {
+                padding: 18px 16px 22px;
+                border-radius: 12px;
+                min-height: auto;
+            }
+            #lockScreen h1 {
+                font-size: 1.5rem;
+            }
+            #questionText {
+                font-size: 1rem;
+            }
+            .option-btn {
+                padding: 11px 14px;
+                font-size: 0.85rem;
+            }
+            .btn {
+                padding: 11px 22px;
+                font-size: 0.9rem;
+            }
+            #resultsScreen .result-card .big-score {
+                font-size: 3rem;
+            }
+            .stat-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 400px) {
+            #app {
+                padding: 14px 12px 18px;
+            }
+            .quiz-nav {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .quiz-nav .left,
+            .quiz-nav .right {
+                justify-content: center;
+            }
+            .options-grid {
+                gap: 8px;
+            }
+            .option-btn {
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* ───────────────────────────────────────────────────────────── */
+        /* UTILITIES                                                   */
+        /* ───────────────────────────────────────────────────────────── */
+        .flex-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .gap-sm {
+            gap: 10px;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-muted {
+            color: var(--subtext);
+        }
+        .mt-1 {
+            margin-top: 6px;
+        }
+        .mt-2 {
+            margin-top: 14px;
+        }
+        .w-full {
+            width: 100%;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .pin-input {
+            width: 100%;
+            max-width: 320px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 1.2rem;
+            font-family: inherit;
+            outline: none;
+            transition: 0.2s;
+            text-align: center;
+            letter-spacing: 6px;
+        }
+        .pin-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .pin-input::placeholder {
+            letter-spacing: 0;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ════════════════════════ TOAST ════════════════════════ -->
+    <div id="toast"></div>
+
+    <!-- ════════════════════════ APP ════════════════════════ -->
+    <div id="app">
+
+        <!-- ─── LOCK SCREEN ─── -->
+        <div id="lockScreen" class="screen active">
+            <div class="flex-center gap-sm" style="text-align:center;">
+                <div class="lock-icon">🔒</div>
+                <h1>POST-UTME CBT</h1>
+                <p class="sub">Secure Examination Platform</p>
+                <div class="exam-meta">
+                    <span>📝 <strong>20</strong> Questions</span>
+                    <span>⏱️ <strong>30</strong> Minutes</span>
+                    <span>✅ <strong>1</strong> Attempt</span>
+                </div>
+                <div style="margin: 10px 0 4px;">
+                    <span class="badge">🔐 Proctored</span>
+                    <span class="badge" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.2);color:var(--gold);">⚡ Live</span>
+                </div>
+                <p style="color:var(--subtext);font-size:0.85rem;max-width:380px;margin:0 auto;">
+                    Enter your <strong>Exam PIN</strong> to begin. This is a timed assessment.
+                </p>
+                <div style="width:100%;max-width:320px;margin:6px auto 0;">
+                    <input type="password" id="examPin" class="pin-input"
+                    placeholder="Enter PIN (e.g. 1234)"
+                    maxlength="6" autocomplete="off" />
+                    <div style="margin-top:8px;font-size:0.75rem;color:var(--subtext);">
+                        🔑 Default PIN: <strong style="color:var(--text);">1234</strong>
+                    </div>
+                </div>
                 <button id="enterQuizBtn" class="btn btn-primary" style="margin-top:12px;min-width:200px;">
                     🚀 Enter Secure Quiz
                 </button>
